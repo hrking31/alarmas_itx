@@ -7,6 +7,8 @@ import redActiva from "./assets/redActiva.svg";
 import redInactiva from "./assets/redInactiva.svg";
 import Logo from "./assets/Logo.png";
 import { FaWifi } from "react-icons/fa";
+import { IoMdThermometer } from "react-icons/io";
+import { WiHumidity } from "react-icons/wi";
 import style from "./App.module.css";
 
 export default function App() {
@@ -40,50 +42,35 @@ export default function App() {
 
   const ac = data.PLANTA === 0 ? "NORMAL" : "CORTE";
 
-  const wifiColor = data.ESTADO === 0 ? "rgb(244, 66, 66)" : "rgb(66, 244, 97)";
+  const wifiColor = data.ESTADO === 0 ? "white" : "rgb(66, 244, 97)";
 
   return (
     <div className={style.container}>
+      <div className={style.logoTitulo}>
+        <h1>ALARMAS ITX</h1>
+        <img src={Logo} alt="internexa" className={style.iconoInternexa} />
+      </div>
+
       <div className={style.titulo}>
-        <div className={style.titleLeft}>
-          <div className={style.titulo1}>
-            <h2>PLANTA ENERGIA RCA SBL</h2>
-            <FaWifi color={wifiColor} size={48} />
-          </div>
-        </div>
-        <div className={style.titleRight}>
-          <h1>ALARMAS ITX</h1>
-          <img
-            src={Logo}
-            alt="internexa"
-            style={{ width: "150px", height: "100px" }}
-          />
-        </div>
+        <h2>PLANTA ENERGIA RCA SBL</h2>
+        <FaWifi color={wifiColor} className={style.iconoWifi1} />
       </div>
 
       <div className={style.AcPlanta}>
-        <div className={style.ac}>
-          <img
-            src={acColor}
-            alt="AC"
-            style={{ width: "200px", height: "200px" }}
-          />
-        </div>
+        <img src={acColor} alt="AC" className={style.iconosPlantaAc} />
         <div>
-          <h2>AC {ac}</h2>
+          <p>AC {ac}</p>
         </div>
-        <div className={style.planta}>
-          <img
-            src={generadorColor}
-            alt="Planta eléctrica"
-            style={{ width: "200px", height: "200px" }}
-          />
-        </div>
+        <img
+          src={generadorColor}
+          alt="Planta eléctrica"
+          className={style.iconosPlantaAc}
+        />
         <div>
-          <h2>PLANTA {planta}</h2>
+          <p>PLANTA {planta}</p>
         </div>
       </div>
-      <div className={style.titulo1}>
+      <div className={style.titulo}>
         <h2>TEMPERATURA NODO NOGALES</h2>
       </div>
       <div className={style.salas}>
@@ -92,27 +79,45 @@ export default function App() {
             return (
               <div key={key}>
                 <div className={style.sala}>
-                  <h2>{key}</h2>
+                  <h2
+                    style={{
+                      color:
+                        value.Temperatura >= 30
+                          ? "red"
+                          : value.Temperatura < 25
+                          ? "#4b6cb7"
+                          : "#FFA500",
+                    }}
+                  >
+                    {key}
+                  </h2>
                   <FaWifi
-                    color={
-                      value.ESTADO === 0
-                        ? "rgb(244, 66, 66)"
-                        : "rgb(66, 244, 97)"
-                    }
-                    size={20}
+                    color={value.ESTADO === 0 ? "white" : "rgb(66, 244, 97)"}
+                    className={style.iconoWifi}
                   />
                 </div>
                 <div>
                   {value.Temperatura !== undefined && (
-                    <div>
-                      <p>Temperatura: {value.Temperatura}</p>
+                    <div className={style.temp}>
+                      <IoMdThermometer
+                        color={
+                          value.Temperatura >= 30
+                            ? "red"
+                            : value.Temperatura < 25
+                            ? "rgb(66, 244, 97)"
+                            : "#FFA500"
+                        }
+                        className={style.iconos}
+                      />
+                      <p>Temperatura: {value.Temperatura.toFixed(1)}</p>
                     </div>
                   )}
                 </div>
                 <div>
                   {value.Humedad !== undefined && (
-                    <div>
-                      <p>Humedad: {value.Humedad}</p>
+                    <div className={style.humedad}>
+                      <WiHumidity color="blue" className={style.iconos} />
+                      <p>Humedad: {value.Humedad.toFixed(1)}</p>
                     </div>
                   )}
                 </div>
