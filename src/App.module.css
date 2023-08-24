@@ -1,11 +1,25 @@
-body {
+.dark {
+  background-color: #282c34;
+  color: white;
+  --light-shadow-color: rgba(255, 255, 255, 0.2);
+}
+
+.light {
   background-image: url("../src/assets/bg.png");
-  background-position: center center;
-  color: #4b6cb7;
+  color: #0d3f67;
+  --light-shadow-color: rgba(0, 0, 0, 0.5);
 }
 
 .contanainer {
   margin-top: 10px;
+}
+
+.iconosLightbulb {
+  color: #ffcc00;
+}
+
+.iconosLightbulbDark {
+  color: #282c34;
 }
 
 .iconos {
@@ -31,9 +45,20 @@ body {
   height: 180px;
 }
 
+.iconosLightDark {
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-left: 20px;
+  flex-grow: 1;
+  cursor: pointer;
+}
+
 .logoTitulo {
   flex: 1;
   display: flex;
+  height: 80px;
   justify-content: flex-end;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.05) inset;
   background: linear-gradient(
@@ -61,7 +86,7 @@ p {
 .AcPlanta {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 20px var(--light-shadow-color);
   grid-gap: 20px;
   justify-items: center;
   align-items: center;
@@ -86,7 +111,7 @@ p {
   grid-template-columns: repeat(4, 1fr);
   grid-gap: 20px;
   padding-left: 100px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 20px var(--light-shadow-color);
 }
 
 .sala {
@@ -179,7 +204,12 @@ p {
     margin-left: 20px;
   }
 
+  .iconosLightDark {
+    font-size: 25px;
+  }
+
   .logoTitulo {
+    height: 60px;
     font-size: 12px;
     margin-top: 5px;
   }
