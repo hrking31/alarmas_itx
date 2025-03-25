@@ -65,7 +65,7 @@ El **ESP32 (Wemos Mini)** está programado en **Arduino IDE** y se encarga de:
 - Detectar el estado del generador y la energía comercial con relés de potencia  
 - Enviar los datos a **Firebase Realtime Database**  
 
-### **Código ESP32 - Ejemplo (Arduino)**  
+### **Código ESP32 - (Arduino)**  
 ```cpp
 #include <WiFi.h>
 #include <FirebaseESP32.h>
@@ -106,11 +106,11 @@ void loop() {
 
 ## 📸 Capturas de pantalla
 
-### Vista principal
-![Vista principal](./assets/vista-principal.png)
+### Vista PC
+![Vista principal](./src/assets/AlarmaRemotaClaro.png)
 
 ### Vista Movil
-![Panel de monitoreo](./assets/panel-monitoreo.png)
+![Panel de monitoreo](./src/assets/AlarmaRemotaOscuro.jpg)
 
 ## **Contribuciones**  
 Si quieres contribuir al proyecto, ¡eres bienvenido! Puedes hacer un **fork**, crear una nueva rama y enviar un **pull request**.  
