@@ -107,10 +107,10 @@ void loop() {
 ## 📸 Capturas de pantalla
 
 ### Vista PC
-![Vista principal](./src/assets/AlarmaRemotaClaro.png)
+<img src="./src/assets/AlarmaRemotaClaro.png" alt="Vista principal" width="400">
 
 ### Vista Movil
-![Panel de monitoreo](./src/assets/AlarmaRemotaOscuro.jpg)
+<img src="./src/assets/AlarmaRemotaOscuro.jpg" alt="Panel de monitoreo" width="200" height="300">
 
 ## **Contribuciones**  
 Si quieres contribuir al proyecto, ¡eres bienvenido! Puedes hacer un **fork**, crear una nueva rama y enviar un **pull request**.  
