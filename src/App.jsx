@@ -7,6 +7,8 @@ import logo from "./assets/Logo.png";
 import { RedAc } from "./Components/Icons/RedAc.jsx";
 import { Generador } from "./components/icons/Generador";
 import { MdOutlinePower } from "react-icons/md";
+import { IoMdThermometer } from "react-icons/io";
+import { WiHumidity } from "react-icons/wi";
 
 export default function App() {
   const [data, setData] = useState({});
@@ -241,9 +243,13 @@ export default function App() {
                               ° C
                             </span>
                           </p>
-                          <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
-                            Temp
-                          </span>
+                          <div className="flex items-center gap- text-slate-400">
+                            <IoMdThermometer className="hidden md:block w-4 h-4" />
+                            <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
+                              <span className="md:hidden">Temp</span>
+                              <span className="hidden md:inline">Temperatura</span>
+                            </span>
+                          </div>
                         </div>
 
                         <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
@@ -253,9 +259,13 @@ export default function App() {
                               %
                             </span>
                           </p>
-                          <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
-                            Hum
-                          </span>
+                          <div className="flex items-center gap- text-slate-400">
+                            <WiHumidity className="hidden md:block w-4 h-4" />
+                            <span className="text-[8px] md:text-xs font-black uppercase text-slate-400 tracking-widest">
+                              <span className="md:hidden">Hum</span>
+                              <span className="hidden md:inline">Humedad</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
 
