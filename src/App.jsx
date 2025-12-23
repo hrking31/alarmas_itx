@@ -2,18 +2,10 @@ import { useEffect, useState } from "react";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { app } from "./FirebaseConfig.jsx";
 
-import {
-  FaWifi,
-  FaLightbulb,
-  FaRegLightbulb,
-  FaTimes,
-  FaChartLine,
-} from "react-icons/fa";
+import { FaWifi, FaRegLightbulb, FaTimes, FaChartLine } from "react-icons/fa";
 import logo from "./assets/Logo.png";
 import { RedAc } from "./Components/Icons/RedAc.jsx";
 import { Generador } from "./components/icons/Generador";
-import { IoMdThermometer } from "react-icons/io";
-import { WiHumidity } from "react-icons/wi";
 import { MdOutlinePower } from "react-icons/md";
 
 export default function App() {
@@ -45,16 +37,13 @@ export default function App() {
     const diferencia = ahora - sensorTimestamp;
 
     // Si el sensor envía datos cada 60s, damos un margen de 90s (90000 ms)
-    // por si el internet está lento.
     return diferencia < 90000;
   };
   const plantaEncendida = data.Planta === 1;
   const redCorte = data.Ac === 1;
   const timestamp = data.timestamp;
-  console.log("sensor", data);
 
   return (
-    // h-screen y overflow-hidden en desktop, pero permitimos scroll solo si es estrictamente necesario en móviles muy pequeños
     <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-hidden">
       {/* HEADER - Más compacto en móvil */}
       <header className="w-full mx-auto px-4 md:px-8 flex justify-between items-center shrink-0">
@@ -100,10 +89,10 @@ export default function App() {
               {/* INDICADOR DE CONEXIÓN */}
               <div className="hidden md:flex items-center gap-1.5 mt-1">
                 <div
-                  className={`w-2 h-2 rounded-full ${
+                  className={`${
                     estaConectado(timestamp)
-                      ? "bg-green-500 animate-pulse"
-                      : "bg-slate-400"
+                      ? "bg-green-500 w-2 h-2 rounded-full animate-pulse"
+                      : "bg-slate-400 w-1 h-1 rounded-full animate-ping"
                   }`}
                 ></div>
                 <span className="text-[7px] md:text-[9px] font-bold uppercase tracking-widest text-slate-500">
@@ -112,15 +101,17 @@ export default function App() {
               </div>
               <FaWifi
                 size={14}
-                className={`block md:hidden md:w-6 md:h-6 ${
-                  estaConectado(timestamp) ? "text-green-500" : "text-slate-400"
+                className={`block md:hidden md:w-6 md:h-6${
+                  estaConectado(timestamp)
+                    ? "text-green-500 w-4 h-4 rounded-full "
+                    : "text-slate-400 w-2.5 h-2.5 rounded-full animate-ping"
                 }`}
               />
             </div>
 
             <div className="grid grid-cols-2 xl:grid-cols-1 gap-3 md:gap-6">
               <div
-                className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-[2rem] border-2 ${
+                className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
                   !redCorte
                     ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800"
                     : "bg-red-50 border-red-500 dark:bg-red-900/30 animate-pulse"
@@ -147,16 +138,18 @@ export default function App() {
               </div>
 
               <div
-                className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-[2rem] border-2 ${
+                className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
                   plantaEncendida
-                    ? "bg-orange-50 border-orange-500 dark:bg-orange-900/30 animate-pulse"
+                    ? "bg-orange-50 border-red-500 dark:bg-orange-900/30"
                     : "bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700"
                 }`}
               >
-                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
+                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-0 lg:gap-4 xl:gap-0 2xl:gap-4 text-center md:text-left">
                   <Generador
                     className={`w-15 h-15 md:w-30 md:h-30 ${
-                      !plantaEncendida ? "text-slate-700" : "text-red-500 "
+                      !plantaEncendida
+                        ? "text-slate-500"
+                        : "text-red-500 animate-pulse"
                     }`}
                   />
                   <span className="font-black text-[10px] md:text-sm uppercase italic">
@@ -164,8 +157,8 @@ export default function App() {
                   </span>
                 </div>
                 <span
-                  className={`text-xs md:text-lg font-black ${
-                    plantaEncendida ? "text-orange-500" : "text-slate-400"
+                  className={`text-xs md:text-lg font-black${
+                    plantaEncendida ? "text-red-500" : "text-slate-500"
                   }`}
                 >
                   {plantaEncendida ? "ON" : "OFF"}
@@ -199,10 +192,10 @@ export default function App() {
                     <div
                       key={key}
                       onClick={() => setSelectedSala({ id: key, ...value })}
-                      className={`relative p-4 md:p-8 rounded-[1.5rem] md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
+                      className={`relative p-4 md:p-8 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
                     ${
                       esCritico
-                        ? "bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-600 animate-danger"
+                        ? "bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-600 animate-pulse"
                         : "bg-white border-white dark:bg-slate-900 dark:border-slate-800 active:scale-95"
                     }`}
                     >
@@ -214,10 +207,10 @@ export default function App() {
                           {/* INDICADOR DE CONEXIÓN */}
                           <div className="hidden md:flex items-center gap-1.5 mt-1">
                             <div
-                              className={`w-2 h-2 rounded-full ${
+                              className={`${
                                 estaConectado(value.timestamp)
-                                  ? "bg-green-500 animate-pulse"
-                                  : "bg-slate-400"
+                                  ? "bg-green-500 w-2 h-2 rounded-full animate-pulse"
+                                  : "bg-slate-400 w-1 h-1 rounded-full animate-ping"
                               }`}
                             ></div>
                             <span className="text-[7px] md:text-[9px] font-bold uppercase tracking-widest text-slate-500">
@@ -228,11 +221,10 @@ export default function App() {
                           </div>
                         </div>
                         <FaWifi
-                          size={14}
-                          className={`block md:hidden md:w-6 md:h-6 ${
+                          className={`block md:hidden ${
                             estaConectado(value.timestamp)
-                              ? "text-green-500"
-                              : "text-slate-400"
+                              ? "text-green-500 w-4 h-4 rounded-full "
+                              : "text-slate-400 w-2.5 h-2.5 rounded-full animate-ping"
                           }`}
                         />
                       </div>
@@ -240,13 +232,13 @@ export default function App() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">
                         <div className="flex items-center md:block gap-2">
                           <p
-                            className={`text-2xl md:text-6xl font-black tracking-tighter ${
+                            className={`text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-black tracking-tighter ${
                               esCritico ? "text-red-600" : "dark:text-white"
                             }`}
                           >
                             {value.temperatura?.toFixed(1)}
                             <span className="text-xs md:text-2xl font-bold ml-2">
-                              °C
+                              ° C
                             </span>
                           </p>
                           <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
@@ -255,7 +247,7 @@ export default function App() {
                         </div>
 
                         <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
-                          <p className="text-2xl md:text-6xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
+                          <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
                             {value.humedad?.toFixed(1)}
                             <span className="text-xs md:text-2xl font-bold ml-2">
                               %
@@ -268,8 +260,11 @@ export default function App() {
                       </div>
 
                       {esCritico && (
-                        <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[7px] md:text-[10px] font-black text-center animate-pulse uppercase tracking-wider">
-                          Temperatura fuera de rango
+                        <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center animate-pulse uppercase tracking-wider">
+                          <span className="md:hidden">Fuera de rango</span>{" "}
+                          <span className="hidden md:inline">
+                            Temperatura fuera de rango
+                          </span>{" "}
                         </div>
                       )}
                     </div>
@@ -289,8 +284,8 @@ export default function App() {
 
       {/* MODAL */}
       {selectedSala && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2rem] overflow-hidden animate-in slide-in-from-bottom">
+        <div className="block md:hidden fixed inset-0 z-50 items-end sm:items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-4xl overflow-hidden animate-in slide-in-from-bottom">
             <div className="p-8 text-center">
               <h2 className="text-xl font-black uppercase mb-6">
                 Estadísticas {selectedSala.id}
