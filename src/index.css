@@ -1,0 +1,23 @@
+@import "tailwindcss";@import "tailwindcss";
+
+@theme {
+  /* Animación de latido rojo para emergencias */
+  --animate-danger: danger-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes danger-pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+      transform: scale(1.01);
+      box-shadow: 0 0 25px 5px rgba(239, 68, 68, 0.4);
+    }
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply antialiased transition-colors duration-500;
+}
