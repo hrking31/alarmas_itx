@@ -116,7 +116,7 @@ export default function App() {
                 className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
                   !redCorte
                     ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800"
-                    : "bg-red-50 border-red-500 dark:bg-red-900/30 animate-pulse"
+                    : "bg-red-50 border-red-500 dark:bg-red-900/30 md:animate-pulse"
                 }`}
               >
                 <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
@@ -151,7 +151,7 @@ export default function App() {
                     className={`w-15 h-15 md:w-30 md:h-30 ${
                       !plantaEncendida
                         ? "text-slate-500"
-                        : "text-red-500 animate-pulse"
+                        : "text-red-500 md:animate-pulse"
                     }`}
                   />
                   <span className="font-black text-[10px] md:text-sm uppercase italic">
@@ -197,7 +197,7 @@ export default function App() {
                       className={`relative p-4 md:p-8 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
                     ${
                       esCritico
-                        ? "bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-600 animate-pulse"
+                        ? "bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-600 md:animate-pulse"
                         : "bg-white border-white dark:bg-slate-900 dark:border-slate-800 active:scale-95"
                     }`}
                     >
@@ -270,11 +270,11 @@ export default function App() {
                       </div>
 
                       {esCritico && (
-                        <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center animate-pulse uppercase tracking-wider">
+                        <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center md:animate-pulse uppercase tracking-wider">
                           <span className="md:hidden">Fuera de rango</span>{" "}
                           <span className="hidden md:inline">
                             Temperatura fuera de rango
-                          </span>{" "}
+                          </span>
                         </div>
                       )}
                     </div>
