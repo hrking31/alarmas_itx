@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ref, onValue } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import Footer from "../../Components/Footer/Footer.jsx";
@@ -11,6 +12,7 @@ import { WiHumidity } from "react-icons/wi";
 import { FaWifi, FaRegLightbulb, FaTimes, FaChartLine } from "react-icons/fa";
 
 export default function App() {
+  const navigate = useNavigate();
   const [data, setData] = useState({});
   const [darkMode, setDarkMode] = useState(
     () => localStorage.getItem("darkMode") === "true"
@@ -47,23 +49,27 @@ export default function App() {
   return (
     <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-hidden">
       {/* HEADER - Más compacto en móvil */}
-      <header className="w-full mx-auto px-4 md:px-8 flex justify-between items-center shrink-0">
-        <div className="flex items-center gap-3 md:gap-4">
+      <header className="w-full mx-auto px-4 md:px-8 flex justify-between items-center shrink-0 pt-2">
+        <button
+          type="button"
+          onClick={() => navigate ("/ControlDashboard")} 
+          className="flex items-center gap-3 md:gap-4 group focus:outline-none"
+        >
           <img
             src={logo}
-            alt="Logo"
-            className="w-15 h-15 md:w-30 md:h-30 object-contain"
+            alt="Alarmas ITX"
+            className="w-10 h-10 md:w-14 md:h-14 object-contain transition-transform duration-200 group-hover:scale-105"
           />
 
-          <div>
-            <h1 className="text-xl md:text-4xl font-black tracking-tighter uppercase italic leading-none">
+          <div className="text-left">
+            <h1 className="text-xl md:text-4xl font-black tracking-tighter uppercase italic leading-none transition-colors duration-200 group-hover:text-blue-400">
               Alarmas ITX
             </h1>
             <p className="text-[8px] md:text-xs font-bold text-slate-400 tracking-[0.2em] uppercase mt-1">
               Centro de Monitoreo
             </p>
           </div>
-        </div>
+        </button>
 
         <button
           onClick={() => setDarkMode(!darkMode)}

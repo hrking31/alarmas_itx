@@ -31,7 +31,7 @@ export default function ViewLogin() {
     setLoading(true);
     try {
       await login(user.email, user.password);
-      navigate("/ViewSelector");
+      navigate("/ControlDashboard");
     } catch (err) {
       const errorMessages = {
         "auth/invalid-email": "El formato del correo no es válido.",
@@ -70,7 +70,7 @@ export default function ViewLogin() {
           {/* Caja de Formulario Estilo Dashboard */}
           <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 p-6 sm:p-8 rounded-2xl shadow-2xl relative group transition-all duration-500 hover:border-emerald-500/30">
             {/* Indicador visual de estado */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[2px] bg-linear-to-r from-transparent via-emerald-500 to-transparent"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-0.5 bg-linear-to-r from-transparent via-emerald-500 to-transparent"></div>
 
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {/* Input Correo */}

@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "./Components/ProtectedRoutes/ProtectedRoutes";
 import {
   ViewDashboard,
-  ControlDashboard,
+  ViewControlDashboard,
   ViewLogin,
   ViewResetPassword,
 } from "./Views/index";
@@ -17,7 +17,7 @@ export default function App() {
         path="/ControlDashboard"
         element={
           <ProtectedRoute>
-            <ControlDashboard />
+            <ViewControlDashboard />
           </ProtectedRoute>
         }
       />
