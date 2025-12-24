@@ -130,7 +130,7 @@ export default function ControlDashboard() {
     );
 
   return (
-    <div className="h-screen flex flex-col verflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+    <div className="h-svh flex flex-col verflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
       {/* HEADER */}
       <header className="w-full mx-auto px-3 md:px-8 flex justify-between items-center shrink-0 py-1.5 md:pt-2">
         <div className="flex items-center gap-2 md:gap-4">
