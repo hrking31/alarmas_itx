@@ -2,3 +2,26 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@layer utilities {
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    /* Color Slate-800 (Borde del dashboard) */
+    background-color: #1e293b;
+    border-radius: 20px;
+    border: 1px solid transparent; /* Espaciado sutil */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    /* Color Emerald-500 (Acento principal cuando pasas el mouse) */
+    background-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); /* Brillo neón al hacer hover */
+  }
+}

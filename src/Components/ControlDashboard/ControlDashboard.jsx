@@ -16,11 +16,13 @@ import {
   FaTrashAlt,
   FaRegLightbulb,
 } from "react-icons/fa";
+import { useAuth } from "../../Context/AuthContext.jsx";
 import { IoShieldCheckmarkSharp } from "react-icons/io5";
 import Footer from "../../Components/Footer/Footer.jsx";
 
 export default function ControlDashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   // CONFIG_ID: Usaremos un documento fijo para la configuración global
   const CONFIG_ID = "telegram_config";
 
@@ -33,6 +35,10 @@ export default function ControlDashboard() {
   const [chatId, setChatId] = useState("");
   const [chatList, setChatList] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handlerLogout = async () => {
+    await logout();
+  };
 
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode);
@@ -124,13 +130,16 @@ export default function ControlDashboard() {
     );
 
   return (
-    <div className="min-h-svh md:h-screen flex flex-col verflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+    <div className="h-screen flex flex-col verflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
       {/* HEADER */}
       <header className="w-full mx-auto px-3 md:px-8 flex justify-between items-center shrink-0 py-1.5 md:pt-2">
         <div className="flex items-center gap-2 md:gap-4">
           <button
             className="bg-blue-500/20 p-2 md:p-3 rounded-xl md:rounded-2xl border border-blue-500/30"
-            onClick={() => navigate("/")}
+            onClick={() => {
+              handlerLogout();
+              navigate("/");
+            }}
           >
             <FaTelegramPlane className="text-xl md:text-3xl text-blue-400" />
           </button>
@@ -158,89 +167,87 @@ export default function ControlDashboard() {
       </header>
 
       {/* SECCIÓN TOKEN + CHAT */}
-      <div className="shrink-0">
-        <div className="w-full mx-auto p-4 md:px-10 md:py-4 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-12 border">
-          {/* SECCIÓN TOKEN */}
-          <section className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl transition-all hover:border-emerald-500/30">
-            <div className="flex items-center gap-3 mb-6">
-              <FaKey className="text-emerald-500" />
-              <h2 className="font-black uppercase tracking-widest text-sm text-slate-400">
-                Bot API Token
-              </h2>
-            </div>
+      <div className="w-full mx-auto p-4 md:px-10 md:py-4 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-16 shrink-0">
+        {/* SECCIÓN TOKEN */}
+        <section className="bg-slate-900/50 border border-slate-800 p-4 md:p-6 rounded-2xl transition-all hover:border-emerald-500/30">
+          <div className="flex items-center gap-3 mb-3 md:mb-6">
+            <FaKey className="text-emerald-500" />
+            <h2 className="font-black uppercase tracking-widest text-sm text-slate-400">
+              Bot API Token
+            </h2>
+          </div>
 
-            {!isTokenSaved ? (
-              <form onSubmit={handleSaveToken} className="space-y-4">
-                <input
-                  type="password"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="Paste token from BotFather..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all"
-                />
-                <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black py-2 rounded-lg text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-900/20">
-                  Vincular Terminal
-                </button>
-              </form>
-            ) : (
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <IoShieldCheckmarkSharp className="text-2xl text-emerald-500 animate-pulse" />
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-emerald-500 tracking-tighter">
-                      Enlace Seguro Establecido
-                    </p>
-                    <p className="text-[9px] font-mono text-slate-600">
-                      •••••••••••••••••••••••••
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsTokenSaved(false)}
-                  className="text-[9px] font-bold text-slate-500 hover:text-white uppercase tracking-widest"
-                >
-                  Reset
-                </button>
-              </div>
-            )}
-          </section>
-
-          {/* SECCIÓN NUEVO CHAT */}
-          <section className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl transition-all hover:border-blue-500/30">
-            <div className="flex items-center gap-3 mb-6">
-              <FaUserPlus className="text-blue-500" />
-              <h2 className="font-black uppercase tracking-widest text-sm text-slate-400">
-                Nuevo Receptor
-              </h2>
-            </div>
-            <form onSubmit={handleAddChat} className="space-y-3">
+          {!isTokenSaved ? (
+            <form onSubmit={handleSaveToken} className="space-y-2 md:space-y-4">
               <input
-                type="text"
-                placeholder="Nombre del responsable"
-                value={chatName}
-                onChange={(e) => setChatName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500"
+                type="password"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="Paste token from BotFather..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all"
               />
-              <input
-                type="text"
-                placeholder="Chat ID (Numérico)"
-                value={chatId}
-                onChange={(e) => setChatId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-blue-400 focus:outline-none focus:border-blue-500"
-              />
-              <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2 rounded-lg text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-900/20">
-                Añadir ID
+              <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black py-2 rounded-lg text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-900/20">
+                Vincular Terminal
               </button>
             </form>
-          </section>
-        </div>
+          ) : (
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <IoShieldCheckmarkSharp className="text-2xl text-emerald-500 animate-pulse" />
+                <div>
+                  <p className="text-[10px] font-black uppercase text-emerald-500 tracking-tighter">
+                    Enlace Seguro Establecido
+                  </p>
+                  <p className="text-[9px] font-mono text-slate-600">
+                    •••••••••••••••••••••••••
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsTokenSaved(false)}
+                className="text-[9px] font-bold text-slate-500 hover:text-white uppercase tracking-widest"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* SECCIÓN NUEVO CHAT */}
+        <section className="bg-slate-900/50 border border-slate-800 p-4 sm:p-6 rounded-2xl transition-all hover:border-blue-500/30">
+          <div className="flex items-center gap-3 mb-3 md:mb-6">
+            <FaUserPlus className="text-blue-500" />
+            <h2 className="font-black uppercase tracking-widest text-sm text-slate-400">
+              Nuevo Receptor
+            </h2>
+          </div>
+          <form onSubmit={handleAddChat} className="space-y-2 md:space-y-4">
+            <input
+              type="text"
+              placeholder="Nombre del responsable"
+              value={chatName}
+              onChange={(e) => setChatName(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Chat ID (Numérico)"
+              value={chatId}
+              onChange={(e) => setChatId(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-blue-400 focus:outline-none focus:border-blue-500"
+            />
+            <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2 rounded-lg text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-900/20">
+              Añadir ID
+            </button>
+          </form>
+        </section>
       </div>
 
       {/* LISTA NODOS RECEPCION */}
-      <div className="mx-auto w-full px-4 md:px-10 h-50 md:flex-1 min-h-0 ">
+      <div className="mx-auto w-full px-4 md:px-10 min-h-0 md:flex-1">
         <section className="bg-slate-900/30 border border-slate-800 rounded-2xl h-full flex flex-col">
           {/* HEADER FIJO */}
-          <div className="bg-slate-800/50 px-6 py-3 border-b border-slate-800 flex justify-between shrink-0">
+          <div className="bg-slate-800/50 px-6 py-3 border-b border-slate-800 rounded-t-2xl flex justify-between shrink-0">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
               Nodos de Recepción
             </h3>
@@ -250,7 +257,7 @@ export default function ControlDashboard() {
           </div>
 
           {/* LISTA NODOS */}
-          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-800/50">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-custom divide-y divide-slate-800/50">
             {chatList.map((chat) => (
               <div
                 key={chat.id}
@@ -286,5 +293,3 @@ export default function ControlDashboard() {
     </div>
   );
 }
-
-

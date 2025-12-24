@@ -52,7 +52,7 @@ export default function App() {
       <header className="w-full mx-auto px-4 md:px-8 flex justify-between items-center shrink-0 pt-2">
         <button
           type="button"
-          onClick={() => navigate ("/ControlDashboard")} 
+          onClick={() => navigate("/ViewLogin")}
           className="flex items-center gap-3 md:gap-4 group focus:outline-none"
         >
           <img

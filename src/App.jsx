@@ -12,7 +12,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<ViewDashboard />} />
       <Route path="/ViewLogin" element={<ViewLogin />} />
-      <Route path="/ResetPassword" element={<ViewResetPassword />} />
+      <Route path="/ViewResetPassword" element={<ViewResetPassword />} />
       <Route
         path="/ControlDashboard"
         element={

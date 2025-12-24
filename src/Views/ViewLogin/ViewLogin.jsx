@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaLock } from "react-icons/fa";
+import { FaLock, FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "../../Context/AuthContext.jsx";
 import Footer from "../../Components/Footer/Footer.jsx";
 
@@ -51,6 +51,18 @@ export default function ViewLogin() {
 
   return (
     <div className="min-h-svh flex flex-col bg-slate-950 text-slate-200 selection:bg-emerald-500/30">
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 text-slate-500 hover:text-emerald-500 transition-all group"
+      >
+        <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-emerald-500/50 shadow-lg">
+          <FaArrowLeft className="text-xs" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] italic">
+          Abortar Conexión
+        </span>
+      </button>
+
       <div className="flex-1 flex items-center justify-center px-4 py-12 relative overflow-hidden">
         {/* Decoración de fondo (Brillo neón sutil) */}
         <div className="absolute top-1/4 -left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -111,6 +123,11 @@ export default function ViewLogin() {
                   </p>
                 </div>
               )}
+              {message && (
+                <p className="text-app-success text-center text-sm font-medium mt-2">
+                  {message}
+                </p>
+              )}
 
               {/* Botón Acción Principal */}
               <button
@@ -131,25 +148,12 @@ export default function ViewLogin() {
 
             <div className="mt-8 pt-6 border-t border-slate-800 text-center">
               <button
-                onClick={() => navigate("/ControlDashboard")}
+                onClick={() => navigate("/ViewResetPassword")}
                 className="text-[10px] font-bold text-slate-500 hover:text-emerald-500 uppercase tracking-widest transition-colors"
               >
                 ¿Perdiste tu clave de acceso?
               </button>
             </div>
-          </div>
-
-          {/* Registro Secundario */}
-          <div className="text-center">
-            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-              ¿Nueva instalación?{" "}
-              <button
-                // onClick={() => navigate("/ViewRegister")}
-                className="text-emerald-500 hover:text-white transition-colors underline underline-offset-4"
-              >
-                Registrar Iglesia
-              </button>
-            </p>
           </div>
         </div>
       </div>
@@ -157,5 +161,3 @@ export default function ViewLogin() {
     </div>
   );
 }
-
-
