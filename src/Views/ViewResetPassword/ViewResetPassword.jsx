@@ -3,6 +3,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../Firebase/Firebase.js";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../Components/Footer/Footer.jsx";
+import {  FaShieldAlt } from "react-icons/fa"; 
 
 export default function ViewResetPassword() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function ViewResetPassword() {
       setMessage(
         "✅ Si existe una cuenta asociada a este correo, recibirás un enlace de recuperación."
       );
-      setTimeout(() => navigate("/ViewLogin"), 3000); // vuelve al login
+      setTimeout(() => navigate("/ViewLogin"), 3000);
     } catch (err) {
       console.log("🔥 Error Firebase:", err.code, err.message);
       const errorMessages = {
@@ -36,52 +37,62 @@ export default function ViewResetPassword() {
   };
 
   return (
-    <div className="min-h-svh flex flex-col bg-linear-to-b from-gray-900 to-gray-800">
-      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md space-y-4">
-          {/* Encabezado */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-app-main tracking-tight">
-              Recuperar Contraseña
+    <div className="h-svh flex flex-col bg-slate-950 text-slate-100 overflow-hidden transition-colors duration-500">
+      <div className="flex-1 flex items-center justify-center px-4">
+        <div className="w-full max-w-sm space-y-6">
+          {/* Encabezado con Icono */}
+          <div className="text-center">
+            <div className="inline-flex p-4 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
+              <FaShieldAlt className="text-4xl text-emerald-500 animate-pulse" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-white leading-none">
+              Restablecer <span className="text-emerald-500">Acceso</span>
             </h1>
-            <p className="text-app-muted text-base sm:text-lg mt-2">
-              Ingresa tu correo para continuar
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-3">
+              Verificación de Protocolo
             </p>
           </div>
 
-          <div className="w-full max-w-md bg-gray-900/40 backdrop-blur-sm border border-gray-700 shadow-xl p-6">
-            <form
-              onSubmit={handleReset}
-              className="flex flex-col form-dark2 gap-4"
-            >
-              <div className="flex flex-col mt-3">
+          {/* Card del Formulario */}
+          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 p-8 rounded-3xl shadow-2xl shadow-black/50">
+            <form onSubmit={handleReset} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                  Correo Electrónico
+                </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu_correo@ejemplo.com"
-                  className="p-2.5 sm:p-3  bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-app-main w-full text-gray-300 no-autofill"
+                  placeholder="admin@terminal.com"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm font-mono text-emerald-400 focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-700"
                 />
               </div>
 
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 bg-app-main text-white py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-app-main/90 transition mt-4"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black py-3 rounded-xl text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-emerald-900/20 mt-2"
               >
-                Enviar enlace de recuperación
+                Enviar Enlace
               </button>
             </form>
 
+            {/* Mensajes de Estado */}
             {message && (
-              <p className="text-app-muted mt-4 text-center">{message}</p>
+              <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[10px] font-bold text-emerald-400 text-center leading-relaxed">
+                {message}
+              </div>
             )}
+
             {error && (
-              <p className="text-app-error mt-4 text-center">{error}</p>
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-bold text-red-400 text-center">
+                {error}
+              </div>
             )}
 
             <button
               onClick={() => navigate("/ViewLogin")}
-              className="text-app-main hover:underline mt-6 text-sm w-full text-center"
+              className="w-full mt-6 text-[9px] font-black text-slate-600 hover:text-emerald-500 uppercase tracking-widest transition-colors"
             >
               Volver al inicio de sesión
             </button>
