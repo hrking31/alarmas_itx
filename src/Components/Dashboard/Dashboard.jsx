@@ -10,14 +10,13 @@ import { MdOutlinePower } from "react-icons/md";
 import { IoMdThermometer } from "react-icons/io";
 import { WiHumidity } from "react-icons/wi";
 import { FaWifi, FaRegLightbulb, FaTimes, FaChartLine } from "react-icons/fa";
+import { useDarkMode } from "../../Context/DarkModeContext";
 
 export default function App() {
   const navigate = useNavigate();
   const [data, setData] = useState({});
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("darkMode") === "true"
-  );
   const [selectedSala, setSelectedSala] = useState(null);
+  const { darkMode, setDarkMode } = useDarkMode();
 
   useEffect(() => {
     const mainRef = ref(database);
@@ -26,11 +25,6 @@ export default function App() {
     });
     return () => unsub();
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("darkMode", darkMode);
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
 
   // Función para verificar si el sensor envió datos hace menos de 60 segundos
   const estaConectado = (sensorTimestamp) => {
@@ -42,6 +36,7 @@ export default function App() {
     // Si el sensor envía datos cada 60s, damos un margen de 90s (90000 ms)
     return diferencia < 90000;
   };
+
   const plantaEncendida = data.Planta === 1;
   const redCorte = data.Ac === 1;
   const timestamp = data.timestamp;

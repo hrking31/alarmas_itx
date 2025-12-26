@@ -50,7 +50,7 @@ export default function ViewLogin() {
   };
 
   return (
-    <div className="min-h-svh flex flex-col bg-slate-950 text-slate-200 selection:bg-emerald-500/30">
+    <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-emerald-500/30">
       <button
         onClick={() => navigate("/")}
         className="absolute top-6 left-6 z-50 flex items-center gap-2 text-slate-500 hover:text-emerald-500 transition-all group"

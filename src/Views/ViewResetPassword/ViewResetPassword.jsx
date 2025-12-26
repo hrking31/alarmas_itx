@@ -37,7 +37,7 @@ export default function ViewResetPassword() {
   };
 
   return (
-    <div className="h-svh flex flex-col bg-slate-950 text-slate-100 overflow-hidden transition-colors duration-500">
+    <div className="h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-hidden">
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-sm space-y-6">
           {/* Encabezado con Icono */}
