@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { db } from "../../Firebase/Firebase";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-} from "firebase/firestore";
+import { database } from "../../Firebase/Firebase";
+import { ref, set, get, update, onValue } from "firebase/database";
 import {
   FaTelegramPlane,
   FaKey,
@@ -46,89 +39,167 @@ export default function ControlDashboard() {
   };
 
   // Cargar configuración inicial desde Firestore
+  // useEffect(() => {
+  //   const fetchConfig = async () => {
+  //     try {
+  //       const docRef = doc(db, "configuraciones", CONFIG_ID);
+  //       const docSnap = await getDoc(docRef);
+  //       if (docSnap.exists()) {
+  //         const data = docSnap.data();
+  //         if (data.botToken) setIsTokenSaved(true);
+  //         setChatList(data.receptores || []);
+  //         setTempMax(data.tempMax || "");
+  //         setTempMin(data.tempMin || "");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error cargando config:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchConfig();
+  // }, []);
+
+  // --- EFECTO PARA CARGAR DATOS DESDE REALTIME DATABASE ---
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const docRef = doc(db, "configuraciones", CONFIG_ID);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.botToken) setIsTokenSaved(true);
-          setChatList(data.receptores || []);
-          setTempMax(data.tempMax || "");
-          setTempMin(data.tempMin || "");
+    const configRef = ref(database, "configuracion");
+
+    // Usamos onValue para que el Dashboard se actualice en tiempo real si alguien más cambia algo
+    const unsubscribe = onValue(configRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        if (data.telegram?.botToken) {
+          setIsTokenSaved(true);
+        } else {
+          setIsTokenSaved(false);
         }
-      } catch (error) {
-        console.error("Error cargando config:", error);
-      } finally {
-        setLoading(false);
+        setChatList(data.telegram?.receptores || []);
+        setTempMax(data.umbrales?.alto || "");
+        setTempMin(data.umbrales?.bajo || "");
       }
-    };
-    fetchConfig();
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Guardar Token
+  // const handleSaveToken = async (e) => {
+  //   e.preventDefault();
+  //   if (!token.trim()) return;
+  //   try {
+  //     const docRef = doc(db, "configuraciones", CONFIG_ID);
+  //     await setDoc(docRef, { botToken: token }, { merge: true });
+  //     setIsTokenSaved(true);
+  //     setToken("");
+  //     alert("Token vinculado correctamente.");
+  //   } catch (error) {
+  //     console.error("Error al guardar token:", error);
+  //   }
+  // };
+
   const handleSaveToken = async (e) => {
     e.preventDefault();
     if (!token.trim()) return;
     try {
-      const docRef = doc(db, "configuraciones", CONFIG_ID);
-      await setDoc(docRef, { botToken: token }, { merge: true });
-      setIsTokenSaved(true);
+      await update(ref(database, "configuracion/telegram"), {
+        botToken: token,
+      });
       setToken("");
-      alert("Token vinculado correctamente.");
     } catch (error) {
-      console.error("Error al guardar token:", error);
+      console.error(error);
     }
   };
 
+  // const handleSaveThresholds = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const docRef = doc(db, "configuraciones", CONFIG_ID);
+  //     await setDoc(
+  //       docRef,
+  //       {
+  //         tempMax: Number(tempMax),
+  //         tempMin: Number(tempMin),
+  //       },
+  //       { merge: true }
+  //     );
+  //     alert("Umbrales de temperatura actualizados.");
+  //   } catch (error) {
+  //     console.error("Error al guardar umbrales:", error);
+  //   }
+  // };
+
+  // Guardar Umbrales (tempMax y tempMin)
   const handleSaveThresholds = async (e) => {
     e.preventDefault();
     try {
-      const docRef = doc(db, "configuraciones", CONFIG_ID);
-      await setDoc(
-        docRef,
-        {
-          tempMax: Number(tempMax),
-          tempMin: Number(tempMin),
-        },
-        { merge: true }
-      );
-      alert("Umbrales de temperatura actualizados.");
+      await update(ref(database, "configuracion/umbrales"), {
+        alto: Number(tempMax),
+        bajo: Number(tempMin),
+      });
+      alert("✅ Umbrales actualizados en Realtime DB");
     } catch (error) {
-      console.error("Error al guardar umbrales:", error);
+      console.error(error);
     }
   };
 
   // Añadir Receptor ID Chat
+  // const handleAddChat = async (e) => {
+  //   e.preventDefault();
+  //   if (chatName && chatId) {
+  //     const nuevoReceptor = { id: chatId, name: chatName };
+  //     try {
+  //       const docRef = doc(db, "configuraciones", CONFIG_ID);
+  //       await setDoc(
+  //         docRef,
+  //         { receptores: arrayUnion(nuevoReceptor) },
+  //         { merge: true }
+  //       );
+  //       setChatList([...chatList, nuevoReceptor]);
+  //       setChatName("");
+  //       setChatId("");
+  //     } catch (error) {
+  //       console.error("Error al añadir receptor:", error);
+  //     }
+  //   }
+  // };
+
   const handleAddChat = async (e) => {
     e.preventDefault();
     if (chatName && chatId) {
       const nuevoReceptor = { id: chatId, name: chatName };
+      const nuevaLista = [...chatList, nuevoReceptor];
       try {
-        const docRef = doc(db, "configuraciones", CONFIG_ID);
-        await setDoc(
-          docRef,
-          { receptores: arrayUnion(nuevoReceptor) },
-          { merge: true }
-        );
-        setChatList([...chatList, nuevoReceptor]);
+        await update(ref(database, "configuracion/telegram"), {
+          receptores: nuevaLista,
+        });
         setChatName("");
         setChatId("");
       } catch (error) {
-        console.error("Error al añadir receptor:", error);
+        console.error(error);
       }
     }
   };
 
   // Eliminar Receptor
+  // const removeChat = async (chatObj) => {
+  //   try {
+  //     const docRef = doc(db, "configuraciones", CONFIG_ID);
+  //     await updateDoc(docRef, { receptores: arrayRemove(chatObj) });
+  //     setChatList(chatList.filter((c) => c.id !== chatObj.id));
+  //   } catch (error) {
+  //     console.error("Error al eliminar:", error);
+  //   }
+  // };
+
   const removeChat = async (chatObj) => {
+    const nuevaLista = chatList.filter((c) => c.id !== chatObj.id);
     try {
-      const docRef = doc(db, "configuraciones", CONFIG_ID);
-      await updateDoc(docRef, { receptores: arrayRemove(chatObj) });
-      setChatList(chatList.filter((c) => c.id !== chatObj.id));
+      await update(ref(database, "configuracion/telegram"), {
+        receptores: nuevaLista,
+      });
     } catch (error) {
-      console.error("Error al eliminar:", error);
+      console.error(error);
     }
   };
 
@@ -164,7 +235,7 @@ export default function ControlDashboard() {
         ))
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-          <p className="text-xs uppercase tracking-widest font-bold">
+          <p className="text-xs uppercase tracking-widest font-bold p-4">
             Sin receptores configurados
           </p>
         </div>
@@ -182,7 +253,7 @@ export default function ControlDashboard() {
   return (
     <div className="h-svh flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
       {/* HEADER */}
-      <header className="w-full mx-auto px-4 md:px-8 flex justify-between items-center shrink-0 py-3 bg-white/50 dark:bg-transparent backdrop-blur-sm">
+      <header className="w-full mx-auto px-4 pt-2 md:px-10 flex justify-between items-center shrink-0 md:py-6 bg-white/50 dark:bg-transparent backdrop-blur-sm">
         <div className="flex items-center gap-2 md:gap-4">
           <button
             className="bg-blue-500/10 dark:bg-blue-500/20 p-2 md:p-3 rounded-xl border border-blue-500/20 dark:border-blue-500/30 transition-transform active:scale-95 shadow-sm"
@@ -337,7 +408,11 @@ export default function ControlDashboard() {
               Nodos de Recepción
             </h3>
 
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 text-[9px] font-mono font-bold border border-emerald-500/20 animate-pulse">
+            <span
+              className={`px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 text-[9px] font-mono font-bold border border-emerald-500/20 ${
+                chatList.length > 0 ? "animate-pulse" : ""
+              }`}
+            >
               {chatList.length} Online
             </span>
           </button>

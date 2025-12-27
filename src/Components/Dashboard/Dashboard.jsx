@@ -44,7 +44,7 @@ export default function App() {
   return (
     <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-hidden">
       {/* HEADER - Más compacto en móvil */}
-      <header className="w-full mx-auto px-4 md:px-8 flex justify-between items-center shrink-0 pt-2">
+      <header className="w-full mx-auto px-4 md:px-10 flex justify-between items-center shrink-0 pt-2">
         <button
           type="button"
           onClick={() => navigate("/ViewLogin")}
