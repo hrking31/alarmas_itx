@@ -253,7 +253,7 @@ export default function ControlDashboard() {
   return (
     <div className="h-svh flex flex-col overflow-y-auto bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 ">
       {/* HEADER */}
-      <header className="w-full mx-auto px-4 pt-2 md:px-10 flex justify-between items-center shrink-0 md:py-6 bg-white/50 dark:bg-transparent backdrop-blur-sm">
+      <header className="w-full mx-auto px-4 pt-2 md:px-10 flex justify-between items-center shrink-0 md:py-6 bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
         <div className="flex items-center gap-2 md:gap-4">
           <button
             className="bg-blue-500/10 dark:bg-blue-500/20 p-2 md:p-3 rounded-xl border border-blue-500/20 dark:border-blue-500/30 transition-transform active:scale-95 shadow-sm"
@@ -375,7 +375,7 @@ export default function ControlDashboard() {
         </section>
 
         {/* SECCIÓN NUEVO RECEPTOR */}
-        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-12 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-12 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all duration-300">
           <div className="flex items-center gap-3 mb-2">
             <FaUserPlus className="text-blue-500" />
             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
