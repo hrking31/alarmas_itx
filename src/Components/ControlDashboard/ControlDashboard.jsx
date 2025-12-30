@@ -251,7 +251,7 @@ export default function ControlDashboard() {
     );
 
   return (
-    <div className="h-svh flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+    <div className="h-svh flex flex-col overflow-y-auto bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 ">
       {/* HEADER */}
       <header className="w-full mx-auto px-4 pt-2 md:px-10 flex justify-between items-center shrink-0 md:py-6 bg-white/50 dark:bg-transparent backdrop-blur-sm">
         <div className="flex items-center gap-2 md:gap-4">
@@ -288,18 +288,21 @@ export default function ControlDashboard() {
       </header>
 
       {/* ÁREA DE CONFIGURACIÓN */}
-      <div className="w-full mx-auto p-4 md:px-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* SECCIÓN TOKEN */}
-          <section className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-emerald-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-4">
-              <FaKey className="text-emerald-500" />
-              <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
-                Bot API Token
-              </h2>
-            </div>
-            {!isTokenSaved ? (
-              <form onSubmit={handleSaveToken} className="space-y-3">
+      <div className="flex-1 grid grid-cols-12 w-full mx-auto px-4 pt-4 md:pb-4 md:px-10 gap-4 md:items-center">
+        {/* SECCIÓN TOKEN */}
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-emerald-500/30 transition-all">
+          <div className="flex items-center gap-3 mb-2 md:mb-0">
+            <FaKey className="text-emerald-500" />
+            <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+              Bot API Token
+            </h2>
+          </div>
+          {!isTokenSaved ? (
+            <form
+              onSubmit={handleSaveToken}
+              className="flex flex-col flex-1 justify-between md:justify-evenly gap-2"
+            >
+              <div className="flex gap-4">
                 <input
                   type="password"
                   value={token}
@@ -307,12 +310,16 @@ export default function ControlDashboard() {
                   placeholder="Paste Token..."
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
-                <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white dark:text-slate-950 font-black py-2 rounded-lg text-[10px] uppercase tracking-widest transition-all">
+              </div>
+              <div className="flex flex-col ">
+                <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white dark:text-slate-950 font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest transition-all">
                   Vincular
                 </button>
-              </form>
-            ) : (
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between">
+              </div>
+            </form>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between w-full max-w-sm">
                 <div className="flex items-center gap-2">
                   <IoShieldCheckmarkSharp className="text-xl text-emerald-500 animate-pulse" />
                   <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-500">
@@ -326,49 +333,60 @@ export default function ControlDashboard() {
                   Reset
                 </button>
               </div>
-            )}
-          </section>
-
-          {/* SECCIÓN UMBRALES TEMP */}
-          <section className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-orange-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-4">
-              <FaTemperatureHigh className="text-orange-500" />
-              <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
-                Alertas Temp
-              </h2>
             </div>
-            <form onSubmit={handleSaveThresholds} className="space-y-3">
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={tempMax}
-                  onChange={(e) => setTempMax(e.target.value)}
-                  placeholder="Máx °C"
-                  className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                />
-                <input
-                  type="number"
-                  value={tempMin}
-                  onChange={(e) => setTempMin(e.target.value)}
-                  placeholder="Mín °C"
-                  className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-              <button className="w-full bg-slate-800 dark:bg-white text-white dark:text-slate-950 font-black py-2 rounded-lg text-[10px] uppercase tracking-widest transition-all">
+          )}
+        </section>
+        {/* SECCIÓN UMBRALES TEMP */}
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-orange-500/30 transition-all">
+          <div className="flex items-center gap-3 mb-2 md:mb-0">
+            <FaTemperatureHigh className="text-orange-500" />
+            <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+              Alertas Temp
+            </h2>
+          </div>
+
+          <form
+            onSubmit={handleSaveThresholds}
+            className="flex flex-col flex-1 justify-between md:justify-evenly gap-2"
+          >
+            <div className="flex gap-4">
+              <input
+                type="number"
+                value={tempMax}
+                onChange={(e) => setTempMax(e.target.value)}
+                placeholder="Máx °C"
+                className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+              <input
+                type="number"
+                value={tempMin}
+                onChange={(e) => setTempMin(e.target.value)}
+                placeholder="Mín °C"
+                className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex flex-col ">
+              <button className="mt-auto w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
                 Actualizar Rangos
               </button>
-            </form>
-          </section>
-
-          {/* SECCIÓN NUEVO RECEPTOR */}
-          <section className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
-            <div className="flex items-center gap-3 mb-4">
-              <FaUserPlus className="text-blue-500" />
-              <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
-                Nuevo Receptor
-              </h2>
             </div>
-            <form onSubmit={handleAddChat} className="space-y-3">
+          </form>
+        </section>
+
+        {/* SECCIÓN NUEVO RECEPTOR */}
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-12 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
+          <div className="flex items-center gap-3 mb-2 md:mb-0">
+            <FaUserPlus className="text-blue-500" />
+            <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+              Nuevo Receptor
+            </h2>
+          </div>
+          <form
+            onSubmit={handleAddChat}
+            className="flex flex-col flex-1 justify-between md:justify-evenly gap-2"
+          >
+            <div className="space-y-3 md:space-y-6">
               <input
                 type="text"
                 placeholder="Responsable"
@@ -383,26 +401,42 @@ export default function ControlDashboard() {
                 onChange={(e) => setChatId(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-blue-600 dark:text-blue-400 focus:outline-none"
               />
-              <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2 rounded-lg text-[10px] uppercase tracking-widest">
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
                 Registrar ID
               </button>
-            </form>
-          </section>
-        </div>
+
+              {/* BOTON PARA ABRIR MODAL VISIBLE SOLO MOVIL */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="md:hidden w-full bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-lg px-6 py-3 flex justify-between items-center shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FaUsers className="text-[20px] text-blue-500" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                    Nodos de Recepción
+                  </h3>
+                </div>
+
+                <span
+                  className={`px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 text-[9px] font-mono font-bold border border-emerald-500/20 ${
+                    chatList.length > 0 ? "animate-pulse" : ""
+                  }`}
+                >
+                  {chatList.length} Online
+                </span>
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
 
       {/* LISTA DE NODOS PC */}
-      <div className="w-full mx-auto px-4 md:px-10 min-h-0">
+      <div className="flex-1 hidden md:block w-full mx-auto px-4 md:px-10 min-h-50">
         <section className="bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col shadow-sm overflow-hidden md:h-full">
-          {/*BOTON PARA ABRIR MODAL*/}
-          <button
-            onClick={() => {
-              if (window.innerWidth < 768) {
-                setIsModalOpen(true);
-              }
-            }}
-            className="bg-slate-100 dark:bg-slate-800/50 px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center"
-          >
+          <div className="bg-slate-100 dark:bg-slate-800/50 px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
             <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
               <FaUsers className="text-[20px] text-blue-500" />
               Nodos de Recepción
@@ -415,10 +449,9 @@ export default function ControlDashboard() {
             >
               {chatList.length} Online
             </span>
-          </button>
+          </div>
 
-          {/* LISTA VISIBLE SOLO EN PC */}
-          <div className="hidden md:flex flex-col min-h-0">
+          <div className="md:flex flex-col overflow-y-auto">
             <UsersList />
           </div>
         </section>
@@ -455,3 +488,222 @@ export default function ControlDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+// return (
+//   <div className="min-h-screen h-svh flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+//     {/* HEADER - Ajustado para no ocupar demasiado espacio en móvil */}
+//     <header className="w-full mx-auto px-4 py-3 md:px-10 flex justify-between items-center shrink-0 bg-white/50 dark:bg-transparent backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/50">
+//       <div className="flex items-center gap-3 md:gap-4">
+//         <button
+//           className="bg-blue-500/10 dark:bg-blue-500/20 p-2 md:p-3 rounded-xl border border-blue-500/20 dark:border-blue-500/30 transition-transform active:scale-95 shadow-sm"
+//           onClick={() => {
+//             handlerLogout();
+//             navigate("/");
+//           }}
+//         >
+//           <FaTelegramPlane className="text-xl md:text-2xl text-blue-500 dark:text-blue-400" />
+//         </button>
+
+//         <div>
+//           <h1 className="text-lg md:text-2xl font-black uppercase italic tracking-tighter leading-none dark:text-white text-slate-800">
+//             Control <span className="text-emerald-500">Notificaciones</span>
+//           </h1>
+//           <p className="text-[9px] md:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+//             Módulo de enlace Telegram
+//           </p>
+//         </div>
+//       </div>
+
+//       <button
+//         onClick={() => setDarkMode(!darkMode)}
+//         className="p-2 md:p-3 rounded-xl bg-white dark:bg-slate-900 shadow-md border border-slate-200 dark:border-slate-800 active:scale-90 transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
+//       >
+//         <FaRegLightbulb
+//           className={`w-4 h-4 md:w-5 md:h-5 ${
+//             !darkMode ? "text-amber-500" : "text-emerald-500"
+//           }`}
+//         />
+//       </button>
+//     </header>
+
+//     {/* ÁREA DE CONTENIDO PRINCIPAL - Scrollable en móvil, contenido fijo en PC */}
+//     <main className="flex-1 overflow-y-auto md:overflow-hidden flex flex-col">
+//       {/* GRID DE CONFIGURACIÓN */}
+//       <div className="grid grid-cols-12 w-full mx-auto px-4 py-4 md:px-10 gap-4 shrink-0">
+//         {/* SECCIÓN TOKEN */}
+//         <section className="col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-emerald-500/30 transition-all flex flex-col justify-between min-h-[160px]">
+//           <div className="flex items-center gap-3 mb-3">
+//             <FaKey className="text-emerald-500" />
+//             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+//               Bot API Token
+//             </h2>
+//           </div>
+//           {!isTokenSaved ? (
+//             <form onSubmit={handleSaveToken} className="space-y-3">
+//               <input
+//                 type="password"
+//                 value={token}
+//                 onChange={(e) => setToken(e.target.value)}
+//                 placeholder="Paste Token..."
+//                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+//               />
+//               <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white dark:text-slate-950 font-black py-2.5 rounded-lg text-[10px] uppercase tracking-widest transition-all">
+//                 Vincular
+//               </button>
+//             </form>
+//           ) : (
+//             <div className="flex-1 flex items-center justify-center">
+//               <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between w-full">
+//                 <div className="flex items-center gap-2">
+//                   <IoShieldCheckmarkSharp className="text-xl text-emerald-500 animate-pulse" />
+//                   <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-500">
+//                     Enlace Activo
+//                   </p>
+//                 </div>
+//                 <button
+//                   onClick={() => setIsTokenSaved(false)}
+//                   className="text-[9px] font-bold text-slate-400 hover:text-red-500 uppercase"
+//                 >
+//                   Reset
+//                 </button>
+//               </div>
+//             </div>
+//           )}
+//         </section>
+
+//         {/* SECCIÓN UMBRALES TEMP */}
+//         <section className="col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-orange-500/30 transition-all flex flex-col justify-between min-h-[160px]">
+//           <div className="flex items-center gap-3 mb-3">
+//             <FaTemperatureHigh className="text-orange-500" />
+//             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+//               Alertas Temp
+//             </h2>
+//           </div>
+//           <form onSubmit={handleSaveThresholds} className="space-y-3">
+//             <div className="flex gap-3">
+//               <input
+//                 type="number"
+//                 value={tempMax}
+//                 onChange={(e) => setTempMax(e.target.value)}
+//                 placeholder="Máx °C"
+//                 className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
+//               />
+//               <input
+//                 type="number"
+//                 value={tempMin}
+//                 onChange={(e) => setTempMin(e.target.value)}
+//                 placeholder="Mín °C"
+//                 className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+//               />
+//             </div>
+//             <button className="w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-2.5 rounded-lg text-[10px] uppercase tracking-widest transition-all">
+//               Actualizar Rangos
+//             </button>
+//           </form>
+//         </section>
+
+//         {/* SECCIÓN NUEVO RECEPTOR */}
+//         <section className="col-span-12 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all flex flex-col justify-between min-h-[160px]">
+//           <div className="flex items-center gap-3 mb-3">
+//             <FaUserPlus className="text-blue-500" />
+//             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+//               Nuevo Receptor
+//             </h2>
+//           </div>
+//           <form onSubmit={handleAddChat} className="space-y-3">
+//             <div className="grid grid-cols-2 gap-3">
+//               <input
+//                 type="text"
+//                 placeholder="Responsable"
+//                 value={chatName}
+//                 onChange={(e) => setChatName(e.target.value)}
+//                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm text-slate-600 dark:text-slate-300 focus:outline-none"
+//               />
+//               <input
+//                 type="text"
+//                 placeholder="Chat ID"
+//                 value={chatId}
+//                 onChange={(e) => setChatId(e.target.value)}
+//                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-blue-600 dark:text-blue-400 focus:outline-none"
+//               />
+//             </div>
+//             <div className="flex flex-col gap-2">
+//               <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2.5 rounded-lg text-[10px] uppercase tracking-widest">
+//                 Registrar ID
+//               </button>
+
+//               {/* BOTON MÓVIL PARA VER LISTA */}
+//               <button
+//                 type="button"
+//                 onClick={() => setIsModalOpen(true)}
+//                 className="md:hidden w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-2 flex justify-between items-center"
+//               >
+//                 <div className="flex items-center gap-2">
+//                   <FaUsers className="text-blue-500" />
+//                   <span className="text-[10px] font-black uppercase text-slate-500">
+//                     Ver Nodos
+//                   </span>
+//                 </div>
+//                 <span className="text-[10px] font-mono font-bold text-emerald-500">
+//                   {chatList.length} Online
+//                 </span>
+//               </button>
+//             </div>
+//           </form>
+//         </section>
+//       </div>
+
+//       {/* LISTA DE NODOS - Desktop: Se expande para llenar el resto de la pantalla */}
+//       <div className="hidden md:flex flex-1 w-full mx-auto px-10 pb-6 min-h-0">
+//         <section className="w-full bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col shadow-sm overflow-hidden">
+//           <div className="bg-slate-100 dark:bg-slate-800/50 px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center shrink-0">
+//             <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+//               <FaUsers className="text-lg text-blue-500" />
+//               Nodos de Recepción
+//             </h3>
+//             <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 text-[9px] font-mono font-bold border border-emerald-500/20 animate-pulse">
+//               {chatList.length} Online
+//             </span>
+//           </div>
+//           <div className="flex-1 overflow-y-auto custom-scrollbar">
+//             <UsersList />
+//           </div>
+//         </section>
+//       </div>
+//     </main>
+
+//     {/* MODAL MÓVIL */}
+//     {isModalOpen && (
+//       <div className="md:hidden fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 backdrop-blur-sm p-0 sm:p-4">
+//         <div className="w-full max-w-md h-[80vh] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border-t border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
+//           <div className="p-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+//             <div>
+//               <h3 className="text-lg font-black uppercase italic dark:text-white">
+//                 Lista de <span className="text-emerald-500">Receptores</span>
+//               </h3>
+//               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+//                 {chatList.length} Dispositivos
+//               </p>
+//             </div>
+//             <button
+//               onClick={() => setIsModalOpen(false)}
+//               className="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-500"
+//             >
+//               <FaTimes />
+//             </button>
+//           </div>
+//           <div className="flex-1 overflow-y-auto">
+//             <UsersList />
+//           </div>
+//         </div>
+//       </div>
+//     )}
+
+//     <Footer className="shrink-0" />
+//   </div>
+// );
