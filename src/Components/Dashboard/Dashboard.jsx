@@ -9,8 +9,9 @@ import { Generador } from "../../Components/Icons/Generador.jsx";
 import { MdOutlinePower } from "react-icons/md";
 import { IoMdThermometer } from "react-icons/io";
 import { WiHumidity } from "react-icons/wi";
-import { FaWifi, FaRegLightbulb, FaTimes, FaChartLine } from "react-icons/fa";
+import { FaRegLightbulb, FaChartLine } from "react-icons/fa";
 import { useDarkMode } from "../../Context/DarkModeContext";
+import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.jsx";
 
 export default function App() {
   const navigate = useNavigate();
@@ -25,17 +26,6 @@ export default function App() {
     });
     return () => unsub();
   }, []);
-
-  // Función para verificar si el sensor envió datos hace menos de 60 segundos
-  const estaConectado = (sensorTimestamp) => {
-    if (!sensorTimestamp) return false;
-
-    const ahora = Date.now(); // Tiempo actual en milisegundos
-    const diferencia = ahora - sensorTimestamp;
-
-    // Si el sensor envía datos cada 60s, damos un margen de 90s (90000 ms)
-    return diferencia < 90000;
-  };
 
   const plantaEncendida = data.Planta === 1;
   const redCorte = data.Ac === 1;
@@ -89,26 +79,7 @@ export default function App() {
                 Suministro Eléctrico RCA SBL
               </h2>
               {/* INDICADOR DE CONEXIÓN */}
-              <div className="hidden md:flex items-center gap-1.5 mt-1">
-                <div
-                  className={`${
-                    estaConectado(timestamp)
-                      ? "bg-green-500 w-2 h-2 rounded-full animate-pulse"
-                      : "bg-slate-400 w-1 h-1 rounded-full animate-ping"
-                  }`}
-                ></div>
-                <span className="text-[7px] md:text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                  {estaConectado(timestamp) ? "En Línea" : "Desconectado"}
-                </span>
-              </div>
-              <FaWifi
-                size={14}
-                className={`block md:hidden md:w-6 md:h-6${
-                  estaConectado(timestamp)
-                    ? "text-green-500 w-4 h-4 rounded-full "
-                    : "text-slate-400 w-2.5 h-2.5 rounded-full animate-ping"
-                }`}
-              />
+              <StatusIndicator timestamp={timestamp} />
             </div>
 
             <div className="grid grid-cols-2 xl:grid-cols-1 gap-3 md:gap-6">
@@ -206,29 +177,9 @@ export default function App() {
                           <h3 className="text-sm md:text-3xl font-black uppercase tracking-tighter dark:text-white truncate pr-2">
                             {key.replace("_", " ")}
                           </h3>
-                          {/* INDICADOR DE CONEXIÓN */}
-                          <div className="hidden md:flex items-center gap-1.5 mt-1">
-                            <div
-                              className={`${
-                                estaConectado(value.timestamp)
-                                  ? "bg-green-500 w-2 h-2 rounded-full animate-pulse"
-                                  : "bg-slate-400 w-1 h-1 rounded-full animate-ping"
-                              }`}
-                            ></div>
-                            <span className="text-[7px] md:text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                              {estaConectado(value.timestamp)
-                                ? "En Línea"
-                                : "Desconectado"}
-                            </span>
-                          </div>
                         </div>
-                        <FaWifi
-                          className={`block md:hidden ${
-                            estaConectado(value.timestamp)
-                              ? "text-green-500 w-4 h-4 rounded-full "
-                              : "text-slate-400 w-2.5 h-2.5 rounded-full animate-ping"
-                          }`}
-                        />
+                        {/* INDICADOR DE CONEXIÓN */}
+                        <StatusIndicator timestamp={value.timestamp} />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">

@@ -353,29 +353,31 @@ export default function ControlDashboard() {
               <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
                 Registrar ID
               </button>
-
-              {/* BOTON PARA ABRIR MODAL VISIBLE SOLO MOVIL */}
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="md:hidden w-full bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-lg px-6 py-3 flex justify-between items-center shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <FaUsers className="text-[20px] text-blue-500" />
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                    Nodos de Recepción
-                  </h3>
-                </div>
-
-                <span
-                  className={`px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 text-[9px] font-mono font-bold border border-emerald-500/20 ${
-                    chatList.length > 0 ? "animate-pulse" : ""
-                  }`}
-                >
-                  {chatList.length} Online
-                </span>
-              </button>
             </div>
           </form>
+
+          {/* BOTON PARA ABRIR MODAL VISIBLE SOLO MOVIL */}
+          <div className="mt-2">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="md:hidden w-full bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-lg px-6 py-3 flex justify-between items-center shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <FaUsers className="text-[20px] text-blue-500" />
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  Nodos de Recepción
+                </h3>
+              </div>
+
+              <span
+                className={`px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 text-[9px] font-mono font-bold border border-emerald-500/20 ${
+                  chatList.length > 0 ? "animate-pulse" : ""
+                }`}
+              >
+                {chatList.length} Online
+              </span>
+            </button>
+          </div>
         </section>
       </div>
 
