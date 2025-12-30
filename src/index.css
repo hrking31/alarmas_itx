@@ -2,26 +2,52 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  /* Animación de loading */
+  @keyframes loading-bar {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Animación de notificaciones */
+  @keyframes slide-in {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes progress {
+    0% { width: 100%; }
+    100% { width: 0%; }
+  }
+
+  /* Registro de clases de animación */
+  --animate-slide-in: slide-in 0.3s ease-out forwards;
+  --animate-progress-timer: progress 4s linear forwards;
+}
+
 @layer utilities {
+  /* SCROLLBAR PERSONALIZADO */
   .scrollbar-custom::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   .scrollbar-custom::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .scrollbar-custom::-webkit-scrollbar-thumb {
-    /* Color Slate-800 (Borde del dashboard) */
-    background-color: #1e293b;
-    border-radius: 20px;
-    border: 1px solid transparent; /* Espaciado sutil */
+   .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-800 rounded-full border border-transparent;
+    background-clip: content-box;
   }
 
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    /* Color Emerald-500 (Acento principal cuando pasas el mouse) */
-    background-color: #10b981;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); /* Brillo neón al hacer hover */
+    @apply bg-emerald-500;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+
+   .animate-loading-bar {
+    animation: loading-bar 1.5s infinite ease-in-out;
   }
 }

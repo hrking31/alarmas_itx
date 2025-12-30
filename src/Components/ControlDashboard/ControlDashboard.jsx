@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { database } from "../../Firebase/Firebase";
-import { ref, set, get, update, onValue } from "firebase/database";
+import { ref, update, onValue } from "firebase/database";
 import {
   FaTelegramPlane,
   FaKey,
@@ -13,12 +13,15 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import { useAuth } from "../../Context/AuthContext.jsx";
+import { useAppContext } from "../../Context/AppContext";
 import { useDarkMode } from "../../Context/DarkModeContext";
 import { IoShieldCheckmarkSharp } from "react-icons/io5";
+import Loading from "../Loading/Loading.jsx";
 import Footer from "../../Components/Footer/Footer.jsx";
 
 export default function ControlDashboard() {
   const navigate = useNavigate();
+  const { showNotif, confirmAction } = useAppContext();
   const { logout } = useAuth();
   const { darkMode, setDarkMode } = useDarkMode();
   const [token, setToken] = useState("");
@@ -31,40 +34,14 @@ export default function ControlDashboard() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // CONFIG_ID: Usaremos un documento fijo para la configuración global
-  const CONFIG_ID = "telegram_config";
-
   const handlerLogout = async () => {
     await logout();
   };
 
-  // Cargar configuración inicial desde Firestore
-  // useEffect(() => {
-  //   const fetchConfig = async () => {
-  //     try {
-  //       const docRef = doc(db, "configuraciones", CONFIG_ID);
-  //       const docSnap = await getDoc(docRef);
-  //       if (docSnap.exists()) {
-  //         const data = docSnap.data();
-  //         if (data.botToken) setIsTokenSaved(true);
-  //         setChatList(data.receptores || []);
-  //         setTempMax(data.tempMax || "");
-  //         setTempMin(data.tempMin || "");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error cargando config:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchConfig();
-  // }, []);
-
-  // --- EFECTO PARA CARGAR DATOS DESDE REALTIME DATABASE ---
+  // Cargar configuración inicial desde realtime database
   useEffect(() => {
     const configRef = ref(database, "configuracion");
 
-    // Usamos onValue para que el Dashboard se actualice en tiempo real si alguien más cambia algo
     const unsubscribe = onValue(configRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
@@ -84,50 +61,82 @@ export default function ControlDashboard() {
   }, []);
 
   // Guardar Token
-  // const handleSaveToken = async (e) => {
-  //   e.preventDefault();
-  //   if (!token.trim()) return;
-  //   try {
-  //     const docRef = doc(db, "configuraciones", CONFIG_ID);
-  //     await setDoc(docRef, { botToken: token }, { merge: true });
-  //     setIsTokenSaved(true);
-  //     setToken("");
-  //     alert("Token vinculado correctamente.");
-  //   } catch (error) {
-  //     console.error("Error al guardar token:", error);
-  //   }
-  // };
-
   const handleSaveToken = async (e) => {
     e.preventDefault();
-    if (!token.trim()) return;
+    if (!token.trim()) {
+      showNotif("warning", "El campo del Token está vacío");
+      return;
+    }
+    const seguro = await confirmAction(
+      "¿Actualizar Token? Esto cambiará la vinculación del Bot de Telegram"
+    );
+    if (!seguro) return;
     try {
       await update(ref(database, "configuracion/telegram"), {
         botToken: token,
       });
+
+      showNotif("success", "Protocolo: Token de acceso actualizado");
       setToken("");
     } catch (error) {
       console.error(error);
+      showNotif("error", "Error de red: No se pudo sincronizar el Token");
     }
   };
 
-  // const handleSaveThresholds = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     const docRef = doc(db, "configuraciones", CONFIG_ID);
-  //     await setDoc(
-  //       docRef,
-  //       {
-  //         tempMax: Number(tempMax),
-  //         tempMin: Number(tempMin),
-  //       },
-  //       { merge: true }
-  //     );
-  //     alert("Umbrales de temperatura actualizados.");
-  //   } catch (error) {
-  //     console.error("Error al guardar umbrales:", error);
-  //   }
-  // };
+  // Añadir Receptor ID Chat
+  const handleAddChat = async (e) => {
+    e.preventDefault();
+
+    if (chatName && chatId) {
+      const nuevoReceptor = {
+        id: chatId,
+        name: chatName,
+      };
+      const nuevaLista = [...chatList, nuevoReceptor];
+      try {
+        await update(ref(database, "configuracion/telegram"), {
+          receptores: nuevaLista,
+        });
+
+        showNotif("success", `Terminal: Receptor ${chatName} vinculado`);
+
+        setChatName("");
+        setChatId("");
+      } catch (error) {
+        console.error(error);
+        showNotif("error", "Fallo en la sincronización de protocolo");
+      }
+    } else {
+      showNotif("warning", "Datos insuficientes para la vinculación");
+    }
+  };
+
+  // Eliminar Receptor
+  const removeChat = async (chatObj) => {
+    const seguro = await confirmAction(
+      `¿Deseas eliminar a ${chatObj.first_name || "este contacto"} del sistema?`
+    );
+
+    if (!seguro) return;
+
+    const nuevaLista = chatList.filter((c) => c.id !== chatObj.id);
+
+    try {
+      // Actualizar base de datos
+      await update(ref(database, "configuracion/telegram"), {
+        receptores: nuevaLista,
+      });
+
+      showNotif("success", "Protocolo: Receptor eliminado correctamente");
+    } catch (error) {
+      console.error(error);
+      showNotif(
+        "error",
+        "Error crítico: No se pudo actualizar la base de datos"
+      );
+    }
+  };
 
   // Guardar Umbrales (tempMax y tempMin)
   const handleSaveThresholds = async (e) => {
@@ -137,69 +146,11 @@ export default function ControlDashboard() {
         alto: Number(tempMax),
         bajo: Number(tempMin),
       });
-      alert("✅ Umbrales actualizados en Realtime DB");
+
+      showNotif("success", "Protocolo: Umbrales actualizados correctamente");
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  // Añadir Receptor ID Chat
-  // const handleAddChat = async (e) => {
-  //   e.preventDefault();
-  //   if (chatName && chatId) {
-  //     const nuevoReceptor = { id: chatId, name: chatName };
-  //     try {
-  //       const docRef = doc(db, "configuraciones", CONFIG_ID);
-  //       await setDoc(
-  //         docRef,
-  //         { receptores: arrayUnion(nuevoReceptor) },
-  //         { merge: true }
-  //       );
-  //       setChatList([...chatList, nuevoReceptor]);
-  //       setChatName("");
-  //       setChatId("");
-  //     } catch (error) {
-  //       console.error("Error al añadir receptor:", error);
-  //     }
-  //   }
-  // };
-
-  const handleAddChat = async (e) => {
-    e.preventDefault();
-    if (chatName && chatId) {
-      const nuevoReceptor = { id: chatId, name: chatName };
-      const nuevaLista = [...chatList, nuevoReceptor];
-      try {
-        await update(ref(database, "configuracion/telegram"), {
-          receptores: nuevaLista,
-        });
-        setChatName("");
-        setChatId("");
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  };
-
-  // Eliminar Receptor
-  // const removeChat = async (chatObj) => {
-  //   try {
-  //     const docRef = doc(db, "configuraciones", CONFIG_ID);
-  //     await updateDoc(docRef, { receptores: arrayRemove(chatObj) });
-  //     setChatList(chatList.filter((c) => c.id !== chatObj.id));
-  //   } catch (error) {
-  //     console.error("Error al eliminar:", error);
-  //   }
-  // };
-
-  const removeChat = async (chatObj) => {
-    const nuevaLista = chatList.filter((c) => c.id !== chatObj.id);
-    try {
-      await update(ref(database, "configuracion/telegram"), {
-        receptores: nuevaLista,
-      });
-    } catch (error) {
-      console.error(error);
+      showNotif("error", "Fallo en la conexión con la base de datos");
     }
   };
 
@@ -243,15 +194,10 @@ export default function ControlDashboard() {
     </div>
   );
 
-  if (loading)
-    return (
-      <div className="h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center text-emerald-500 font-mono italic">
-        CARGANDO PROTOCOLOS...
-      </div>
-    );
+  if (loading) return <Loading text="CARGANDO PROTOCOLOS..." />;
 
   return (
-    <div className="h-svh flex flex-col overflow-y-auto bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+    <div className="h-svh flex flex-col overflow-y-auto scrollbar-custom bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
       {/* HEADER */}
       <header className="w-full mx-auto px-4 pt-2 md:px-10 flex justify-between items-center shrink-0 md:py-6 bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
         <div className="flex items-center gap-2 md:gap-4">
