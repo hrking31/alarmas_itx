@@ -9,7 +9,7 @@ import { Generador } from "../../Components/Icons/Generador.jsx";
 import { MdOutlinePower } from "react-icons/md";
 import { IoMdThermometer } from "react-icons/io";
 import { WiHumidity } from "react-icons/wi";
-import { FaRegLightbulb, FaChartLine, FaTimes } from "react-icons/fa";
+import { FaRegLightbulb, FaTimes } from "react-icons/fa";
 import { useDarkMode } from "../../Context/DarkModeContext";
 import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.jsx";
 import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
@@ -17,21 +17,64 @@ import GraficaComparativa from "../../Components/GraficaComparativa/GraficaCompa
 
 export default function App() {
   const navigate = useNavigate();
-  const [data, setData] = useState({});
-  const [selectedSala, setSelectedSala] = useState(null);
   const { darkMode, setDarkMode } = useDarkMode();
+  const [sensores, setSensores] = useState(null); 
+  const [umbrales, setUmbrales] = useState(null); 
+  const [heartbeat, setHeartbeat] = useState(null); 
+  const [ac, setAc] = useState(0); 
+  const [planta, setPlanta] = useState(0); 
+  const [selectedSala, setSelectedSala] = useState(null);
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(null); 
 
   useEffect(() => {
-    const mainRef = ref(database);
-    const unsub = onValue(mainRef, (snapshot) => {
-      if (snapshot.exists()) setData(snapshot.val());
-    });
-    return () => unsub();
+    try {
+      const sensoresRef = ref(database, "sensores");
+      const umbralesRef = ref(database, "configuracion/umbrales");
+      const heartbeatRef = ref(database, "heartbeat");
+      const acRef = ref(database, "Ac");
+      const plantaRef = ref(database, "Planta");
+
+      const unsubSensores = onValue(sensoresRef, (snap) => {
+        if (snap.exists()) setSensores(snap.val());
+      });
+
+      const unsubUmbrales = onValue(umbralesRef, (snap) => {
+        if (snap.exists()) setUmbrales(snap.val());
+      });
+
+      const unsubHeartbeat = onValue(heartbeatRef, (snap) => {
+        if (snap.exists()) setHeartbeat(snap.val());
+      });
+
+      const unsubAc = onValue(acRef, (snap) => {
+        setAc(snap.val());
+      });
+
+      const unsubPlanta = onValue(plantaRef, (snap) => {
+        setPlanta(snap.val());
+      });
+
+      setLoading(false);
+
+      return () => {
+        unsubSensores();
+        unsubUmbrales();
+        unsubHeartbeat();
+        unsubAc();
+        unsubPlanta();
+      };
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
   }, []);
 
-  const plantaEncendida = data.Planta === 1;
-  const redCorte = data.Ac === 1;
-  const timestamp = data.timestamp;
+   console.log("vivo", heartbeat);
+
+  const plantaEncendida = planta === 1;
+  const redCorte = ac === 1;
+  const AcPlanta = heartbeat?.AcPlanta?.timestamp;
 
   return (
     <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-hidden">
@@ -81,7 +124,7 @@ export default function App() {
                 Suministro Eléctrico RCA SBL
               </h2>
               {/* INDICADOR DE CONEXIÓN */}
-              <StatusIndicator timestamp={timestamp} />
+              <StatusIndicator timestamp={AcPlanta} />
             </div>
 
             <div className="grid grid-cols-2 xl:grid-cols-1 gap-3 md:gap-6">
@@ -162,88 +205,81 @@ export default function App() {
         {/* PANEL SALAS */}
         <section className="xl:col-span-8 flex flex-col">
           <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 h-full">
-            {data.sensores &&
-              Object.entries(data.sensores)
-                .slice(0, 4)
-                .map(([key, sensorData]) => {
-                  const heartbeatTimestamp =
-                    data.heartbeat?.[key]?.timestamp || 0;
-                  const esCritico = sensorData.temperatura >= 34;
+            {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
+              const heartbeatSensor = heartbeat?.[sala]?.timestamp;
+              const esCritico = dataSensores.temperatura >= umbrales.alto;
+              const nombreSala = sala.replace("_", " ");
 
-                  return (
-                    <div
-                      key={key}
-                      onClick={() =>
-                        setSelectedSala({ id: key, ...sensorData })
-                      }
-                      className={`relative p-4 md:p-8 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
+              return (
+                <div
+                  key={sala}
+                  onClick={() => setSelectedSala({ id: sala, ...dataSensores })}
+                  className={`relative p-4 md:p-8 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
                     ${
                       esCritico
                         ? "bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-600 md:animate-pulse"
                         : "bg-white border-white dark:bg-slate-900 dark:border-slate-800 active:scale-95"
                     }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                          <h3 className="text-sm md:text-3xl font-black uppercase tracking-tighter dark:text-white truncate pr-2">
-                            {key.replace("_", " ")}
-                          </h3>
-                        </div>
-                        {/* INDICADOR DE CONEXIÓN */}
-                        <StatusIndicator timestamp={heartbeatTimestamp} />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">
-                        <div className="flex items-center md:block gap-2">
-                          <p
-                            className={`text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-black tracking-tighter ${
-                              esCritico ? "text-red-600" : "dark:text-white"
-                            }`}
-                          >
-                            {sensorData.temperatura?.toFixed(1)}
-                            <span className="text-xs md:text-2xl font-bold ml-2">
-                              ° C
-                            </span>
-                          </p>
-                          <div className="flex items-center gap- text-slate-400">
-                            <IoMdThermometer className="hidden md:block w-4 h-4" />
-                            <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
-                              <span className="md:hidden">Temp</span>
-                              <span className="hidden md:inline">
-                                Temperatura
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
-                          <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
-                            {sensorData.humedad?.toFixed(1)}
-                            <span className="text-xs md:text-2xl font-bold ml-2">
-                              %
-                            </span>
-                          </p>
-                          <div className="flex items-center gap- text-slate-400">
-                            <WiHumidity className="hidden md:block w-4 h-4" />
-                            <span className="text-[8px] md:text-xs font-black uppercase text-slate-400 tracking-widest">
-                              <span className="md:hidden">Hum</span>
-                              <span className="hidden md:inline">Humedad</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {esCritico && (
-                        <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center md:animate-pulse uppercase tracking-wider">
-                          <span className="md:hidden">Fuera de rango</span>{" "}
-                          <span className="hidden md:inline">
-                            Temperatura fuera de rango
-                          </span>
-                        </div>
-                      )}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <h3 className="text-sm md:text-3xl font-black uppercase tracking-tighter dark:text-white truncate pr-2">
+                        {nombreSala}
+                      </h3>
                     </div>
-                  );
-                })}
+                    {/* INDICADOR DE CONEXIÓN */}
+                    <StatusIndicator timestamp={heartbeatSensor} />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">
+                    <div className="flex items-center md:block gap-2">
+                      <p
+                        className={`text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-black tracking-tighter ${
+                          esCritico ? "text-red-600" : "dark:text-white"
+                        }`}
+                      >
+                        {dataSensores.temperatura?.toFixed(1)}
+                        <span className="text-xs md:text-2xl font-bold ml-2">
+                          ° C
+                        </span>
+                      </p>
+                      <div className="flex items-center gap- text-slate-400">
+                        <IoMdThermometer className="hidden md:block w-4 h-4" />
+                        <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
+                          <span className="md:hidden">Temp</span>
+                          <span className="hidden md:inline">Temperatura</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
+                      <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
+                        {dataSensores.humedad?.toFixed(1)}
+                        <span className="text-xs md:text-2xl font-bold ml-2">
+                          %
+                        </span>
+                      </p>
+                      <div className="flex items-center gap- text-slate-400">
+                        <WiHumidity className="hidden md:block w-4 h-4" />
+                        <span className="text-[8px] md:text-xs font-black uppercase text-slate-400 tracking-widest">
+                          <span className="md:hidden">Hum</span>
+                          <span className="hidden md:inline">Humedad</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {esCritico && (
+                    <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center md:animate-pulse uppercase tracking-wider">
+                      <span className="md:hidden">Fuera de rango</span>{" "}
+                      <span className="hidden md:inline">
+                        Temperatura fuera de rango
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       </main>
@@ -293,57 +329,3 @@ export default function App() {
     </div>
   );
 }
-
-// exports.verificarConexionSensores = onSchedule(
-//   "every 1 minutes",
-//   async (event) => {
-//     const db = admin.database();
-//     const ahora = Date.now();
-//     const MARGEN_TIEMPO = 90000; // 90s
-
-//     const rootSnap = await db.ref("/").get();
-//     if (!rootSnap.exists()) return;
-//     const data = rootSnap.val();
-
-//     const { botToken, receptores } = data.configuracion?.telegram || {};
-//     if (!botToken || !receptores) return;
-
-//     const sensores = data.sensores || {};
-//     const alertas = data.alertas || {};
-//     let updatesAlertas = {};
-
-//     for (const salaId in sensores) {
-//       if (salaId.startsWith("Sala_")) {
-//         const ultimoUpdate = sensores[salaId].timestamp || 0;
-//         const estaOnlineAhora = ahora - ultimoUpdate < MARGEN_TIEMPO;
-//         const estadoPrevioOnline = alertas[salaId]?.online !== false;
-
-//         if (!estaOnlineAhora && estadoPrevioOnline) {
-//           await enviarTelegram(
-//             botToken,
-//             receptores,
-//             `🔴 *DISPOSITIVO DESCONECTADO*\n📍 *${salaId.replace(
-//               "_",
-//               " "
-//             )}*\n⚠️ El sensor no reporta hace más de 2 min.`
-//           );
-//           updatesAlertas[`${salaId}/online`] = false;
-//         } else if (estaOnlineAhora && !estadoPrevioOnline) {
-//           await enviarTelegram(
-//             botToken,
-//             receptores,
-//             `🟢 *DISPOSITIVO RECONECTADO*\n📍 *${salaId.replace(
-//               "_",
-//               " "
-//             )}*\n✅ El sensor volvió a reportar datos.`
-//           );
-//           updatesAlertas[`${salaId}/online`] = true;
-//         }
-//       }
-//     }
-
-//     if (Object.keys(updatesAlertas).length > 0) {
-//       await db.ref("/alertas").update(updatesAlertas);
-//     }
-//   }
-// );
