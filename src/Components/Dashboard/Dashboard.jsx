@@ -157,16 +157,16 @@ export default function App() {
 
               <div
                 className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
-                  plantaEncendida
-                    ? "bg-orange-50 border-red-500 dark:bg-orange-900/30"
-                    : "bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700"
+                  !plantaEncendida
+                    ? "bg-amber-50/50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800"
+                    : "bg-orange-50 border-red-500 dark:bg-orange-900/30"
                 }`}
               >
                 <div className="flex flex-col md:flex-row items-center gap-2 md:gap-0 lg:gap-4 xl:gap-0 2xl:gap-4 text-center md:text-left">
                   <Generador
                     className={`w-15 h-15 md:w-30 md:h-30 ${
                       !plantaEncendida
-                        ? "text-slate-500"
+                        ? "text-amber-400"
                         : "text-red-500 md:animate-pulse"
                     }`}
                   />
@@ -175,8 +175,8 @@ export default function App() {
                   </span>
                 </div>
                 <span
-                  className={`text-xs md:text-lg font-black${
-                    plantaEncendida ? "text-red-500" : "text-slate-500"
+                  className={`text-xs md:text-lg font-black ${
+                    !plantaEncendida ? "text-amber-400" : "text-red-500"
                   }`}
                 >
                   {plantaEncendida ? "ON" : "OFF"}
@@ -187,13 +187,19 @@ export default function App() {
 
           {/* Estadísticas solo para TV (XL) */}
           <section className="hidden xl:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="mb-4">
+            <div className="mb-4 ml-2">
               <h3 className="text-slate-800 dark:text-white font-black text-sm uppercase">
                 Comparativo Global
               </h3>
-              <p className="text-[9px] text-slate-400 font-bold uppercase">
-                Todas las salas en tiempo real
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[9px] text-slate-400 font-bold uppercase">
+                  Todas las salas en tiempo real
+                </p>
+                <span className="text-[9px] text-slate-400 font-bold uppercase">
+                  Umbrales: {umbrales?.alto ?? "--"}°C /{" "}
+                  {umbrales?.bajo ?? "--"}°C
+                </span>
+              </div>
             </div>
 
             <div className="flex-1 w-full">
@@ -288,40 +294,33 @@ export default function App() {
 
       {/* MODAL */}
       {selectedSala && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-all">
+        <div className="fixed inset-0 z-50 flex  items-center justify-center p-2 bg-slate-950/80 backdrop-blur-sm transition-all">
           {/* Contenedor del Modal */}
           <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800">
-            <div className="p-6 md:p-8">
+            <div className="px-4 py-6 md:p-8">
               {/* Cabecera */}
-              <header className="flex justify-between items-center mb-6">
-                <div className="text-left">
-                  <h2 className="text-xl font-black uppercase tracking-tighter text-slate-800 dark:text-white">
-                    Análisis // {selectedSala.id.replace("_", " ")}
+              <header className="flex justify-between items-center mb-2">
+                <div className="text-left ml-2">
+                  <h2 className="text-cyan-400 font-black text-xl tracking-tighter uppercase">
+                    Live Stream {selectedSala.id.replace("_", " ")}
                   </h2>
-                  <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">
-                    Monitoreo en tiempo real
-                  </p>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase">
+                    Umbrales: {umbrales?.alto ?? "--"}°C /{" "}
+                    {umbrales?.bajo ?? "--"}°C
+                  </span>
                 </div>
                 <button
                   onClick={() => setSelectedSala(null)}
                   className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
                 >
-                  <FaTimes className="text-slate-400" />
+                  <FaTimes className=" text-slate-400" />
                 </button>
               </header>
 
               {/* Área de la Gráfica */}
-              <div className="mb-8 bg-slate-50 dark:bg-slate-950/50 rounded-3xl p-4 border border-slate-100 dark:border-slate-800">
+              <div className="bg-slate-300/50 dark:bg-slate-950/50 rounded-3xl p-4 border border-slate-300/50 dark:border-slate-800">
                 <GraficasTiempoReal salaId={selectedSala.id} />
               </div>
-
-              {/* Botón de acción */}
-              <button
-                onClick={() => setSelectedSala(null)}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase rounded-2xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]"
-              >
-                Finalizar Revisión
-              </button>
             </div>
           </div>
         </div>

@@ -50,10 +50,6 @@ export default function GraficaTiempoReal({ salaId }) {
 
   return (
     <div className="w-full h-80 bg-slate-950 p-4 rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
-      <h3 className="text-cyan-400 font-black text-xs mb-4 tracking-tighter uppercase">
-        Live Stream // {salaId.replace("_", " ")}
-      </h3>
-
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={datos}>
           <defs>
@@ -79,6 +75,7 @@ export default function GraficaTiempoReal({ salaId }) {
           />
 
           <YAxis
+            width={30}
             stroke="#475569"
             fontSize={10}
             tickLine={false}
@@ -109,7 +106,7 @@ export default function GraficaTiempoReal({ salaId }) {
             fill="url(#colorTemp)"
             isAnimationActive={true}
             animationDuration={1000}
-            connectNulls={false}
+            connectNulls={true}
             dot={{ r: 1 }}
           />
         </AreaChart>

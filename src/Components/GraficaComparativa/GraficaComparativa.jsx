@@ -115,6 +115,7 @@ useEffect(() => {
             tickLine={false}
           />
           <YAxis
+            width={40}
             stroke="#475569"
             fontSize={10}
             domain={["auto", "auto"]}
