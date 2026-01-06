@@ -18,14 +18,14 @@ import GraficaComparativa from "../../Components/GraficaComparativa/GraficaCompa
 export default function App() {
   const navigate = useNavigate();
   const { darkMode, setDarkMode } = useDarkMode();
-  const [sensores, setSensores] = useState(null); 
-  const [umbrales, setUmbrales] = useState(null); 
-  const [heartbeat, setHeartbeat] = useState(null); 
-  const [ac, setAc] = useState(0); 
-  const [planta, setPlanta] = useState(0); 
+  const [sensores, setSensores] = useState(null);
+  const [umbrales, setUmbrales] = useState(null);
+  const [heartbeat, setHeartbeat] = useState(null);
+  const [ac, setAc] = useState(0);
+  const [planta, setPlanta] = useState(0);
   const [selectedSala, setSelectedSala] = useState(null);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(null); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     try {
@@ -70,8 +70,6 @@ export default function App() {
     }
   }, []);
 
-   console.log("vivo", heartbeat);
-
   const plantaEncendida = planta === 1;
   const redCorte = ac === 1;
   const AcPlanta = heartbeat?.AcPlanta?.timestamp;
@@ -114,7 +112,8 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT - Ajustado para llenar el espacio restante (flex-1) */}
-      <main className="flex-1 mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12 overflow-y-auto md:overflow-hidden">
+      {/* <main className="flex-1 mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12 overflow-y-auto md:overflow-hidden"> */}
+      <main className="mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12">
         {/* PANEL ENERGÍA - Más delgado en móvil */}
         <section className="xl:col-span-4 flex flex-col gap-4">
           <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800">
@@ -210,7 +209,8 @@ export default function App() {
 
         {/* PANEL SALAS */}
         <section className="xl:col-span-8 flex flex-col">
-          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 h-full">
+          {/* <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 h-full"> */}
+          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10">
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const esCritico = dataSensores.temperatura >= umbrales.alto;
@@ -237,40 +237,44 @@ export default function App() {
                     <StatusIndicator timestamp={heartbeatSensor} />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">
-                    <div className="flex items-center md:block gap-2">
-                      <p
-                        className={`text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-black tracking-tighter ${
-                          esCritico ? "text-red-600" : "dark:text-white"
-                        }`}
-                      >
-                        {dataSensores.temperatura?.toFixed(1)}
-                        <span className="text-xs md:text-2xl font-bold ml-2">
-                          ° C
-                        </span>
-                      </p>
-                      <div className="flex items-center gap- text-slate-400">
-                        <IoMdThermometer className="hidden md:block w-4 h-4" />
-                        <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
-                          <span className="md:hidden">Temp</span>
-                          <span className="hidden md:inline">Temperatura</span>
-                        </span>
+                  <div className="flex justify-center items-center flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">
+                      <div className="flex items-center md:block gap-2">
+                        <p
+                          className={`text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-black tracking-tighter ${
+                            esCritico ? "text-red-600" : "dark:text-white"
+                          }`}
+                        >
+                          {dataSensores.temperatura?.toFixed(1)}
+                          <span className="text-xs md:text-2xl font-bold ml-2">
+                            ° C
+                          </span>
+                        </p>
+                        <div className="flex items-center gap- text-slate-400">
+                          <IoMdThermometer className="hidden md:block w-4 h-4" />
+                          <span className="text-[8px] md:text-xs font-black uppercase text-slate-400">
+                            <span className="md:hidden">Temp</span>
+                            <span className="hidden md:inline">
+                              Temperatura
+                            </span>
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
-                      <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
-                        {dataSensores.humedad?.toFixed(1)}
-                        <span className="text-xs md:text-2xl font-bold ml-2">
-                          %
-                        </span>
-                      </p>
-                      <div className="flex items-center gap- text-slate-400">
-                        <WiHumidity className="hidden md:block w-4 h-4" />
-                        <span className="text-[8px] md:text-xs font-black uppercase text-slate-400 tracking-widest">
-                          <span className="md:hidden">Hum</span>
-                          <span className="hidden md:inline">Humedad</span>
-                        </span>
+                      <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
+                        <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
+                          {dataSensores.humedad?.toFixed(1)}
+                          <span className="text-xs md:text-2xl font-bold ml-2">
+                            %
+                          </span>
+                        </p>
+                        <div className="flex items-center gap- text-slate-400">
+                          <WiHumidity className="hidden md:block w-4 h-4" />
+                          <span className="text-[8px] md:text-xs font-black uppercase text-slate-400 tracking-widest">
+                            <span className="md:hidden">Hum</span>
+                            <span className="hidden md:inline">Humedad</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

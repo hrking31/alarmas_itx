@@ -106,7 +106,7 @@ export default function GraficaTiempoReal({ salaId }) {
             fill="url(#colorTemp)"
             isAnimationActive={true}
             animationDuration={1000}
-            connectNulls={true}
+            connectNulls={false}
             dot={{ r: 1 }}
           />
         </AreaChart>
