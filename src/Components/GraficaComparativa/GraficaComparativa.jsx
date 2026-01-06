@@ -1,0 +1,159 @@
+import { useState, useEffect } from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { ref, onValue } from "firebase/database";
+import { database } from "../../Firebase/Firebase.js";
+
+// Colores neón para identificar cada sala
+const COLORES_SALAS = {
+  Sala_1: "#22d3ee", // Cian
+  Sala_2: "#818cf8", // Indigo
+  Sala_3: "#f472b6", // Rosa
+  Sala_4: "#fbbf24", // Ámbar
+};
+
+export default function GraficaComparativa() {
+  const [datosGrafica, setDatosGrafica] = useState([]);
+
+useEffect(() => {
+  // Fecha de hoy
+  const hoyLocal = new Date()
+    .toLocaleString("sv-SE", { timeZone: "America/Bogota" })
+    .split(" ")[0];
+
+  const historialRef = ref(database, `grafica`);
+
+  const unsubscribe = onValue(historialRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    const mapaPorHora = {};
+
+    Object.keys(data).forEach((salaId) => {
+      const registrosDia = data[salaId]?.[hoyLocal];
+      if (registrosDia) {
+        Object.keys(registrosDia).forEach((ts) => {
+          const registro = registrosDia[ts];
+          const fecha = new Date(Number(ts)); // timestamp en ms → Date
+
+          // Hora en formato HH:MM
+          const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
+            timeZone: "America/Bogota",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          if (!mapaPorHora[horaFormateada]) {
+            mapaPorHora[horaFormateada] = { hora: horaFormateada };
+          }
+
+          // Asignamos la temperatura
+          mapaPorHora[horaFormateada][salaId] = registro.t;
+        });
+      }
+    });
+
+    // Convertimos a array y ordenamos
+    const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
+      a.hora.localeCompare(b.hora)
+    );
+
+    setDatosGrafica(listaOrdenada.slice(-60)); // Últimos 60 puntos
+  });
+
+  return () => unsubscribe();
+}, []);
+
+
+  return (
+    <div className="w-full h-full min-h-87.5 p-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={datosGrafica}
+          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+        >
+          <defs>
+            {Object.keys(COLORES_SALAS).map((sala) => (
+              <linearGradient
+                key={sala}
+                id={`grad_${sala}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={COLORES_SALAS[sala]}
+                  stopOpacity={0.2}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={COLORES_SALAS[sala]}
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            ))}
+          </defs>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#1e293b"
+            vertical={false}
+          />
+          <XAxis
+            dataKey="hora"
+            stroke="#475569"
+            fontSize={10}
+            tickLine={false}
+          />
+          <YAxis
+            stroke="#475569"
+            fontSize={10}
+            domain={["auto", "auto"]}
+            tickLine={false}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#0f172a",
+              border: "1px solid #1e293b",
+              borderRadius: "12px",
+            }}
+            labelStyle={{
+              color: "#e5e7eb",
+              fontSize: 12,
+              fontWeight: "bold",
+            }}
+            itemStyle={{ fontSize: "11px", fontWeight: "bold" }}
+          />
+          <Legend
+            iconType="circle"
+            wrapperStyle={{ fontSize: "10px", paddingTop: "10px" }}
+          />
+
+          {/* Creamos una línea por cada sala configurada */}
+          {Object.keys(COLORES_SALAS).map((salaId) => (
+            <Area
+              key={salaId}
+              type="monotone"
+              dataKey={salaId}
+              stroke={COLORES_SALAS[salaId]}
+              fill={`url(#grad_${salaId})`}
+              strokeWidth={2}
+              connectNulls={false}
+              dot={{ r: 1 }}
+              isAnimationActive={false}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

@@ -9,9 +9,11 @@ import { Generador } from "../../Components/Icons/Generador.jsx";
 import { MdOutlinePower } from "react-icons/md";
 import { IoMdThermometer } from "react-icons/io";
 import { WiHumidity } from "react-icons/wi";
-import { FaRegLightbulb, FaChartLine } from "react-icons/fa";
+import { FaRegLightbulb, FaChartLine, FaTimes } from "react-icons/fa";
 import { useDarkMode } from "../../Context/DarkModeContext";
 import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.jsx";
+import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
+import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
 
 export default function App() {
   const navigate = useNavigate();
@@ -141,15 +143,20 @@ export default function App() {
           </div>
 
           {/* Estadísticas solo para TV (XL) */}
-          <div className="hidden xl:flex flex-1 flex-col items-center justify-center bg-white dark:bg-slate-900 p-10 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-            <FaChartLine
-              className="text-slate-300 dark:text-slate-700 mb-4"
-              size={50}
-            />
-            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest text-center px-4">
-              Análisis en Tiempo Real Disponible
-            </p>
-          </div>
+          <section className="hidden xl:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="mb-4">
+              <h3 className="text-slate-800 dark:text-white font-black text-sm uppercase">
+                Comparativo Global
+              </h3>
+              <p className="text-[9px] text-slate-400 font-bold uppercase">
+                Todas las salas en tiempo real
+              </p>
+            </div>
+
+            <div className="flex-1 w-full">
+              <GraficaComparativa />
+            </div>
+          </section>
         </section>
 
         {/* PANEL SALAS */}
@@ -158,13 +165,17 @@ export default function App() {
             {data.sensores &&
               Object.entries(data.sensores)
                 .slice(0, 4)
-                .map(([key, value]) => {
-                  const esCritico = value.temperatura >= 34;
+                .map(([key, sensorData]) => {
+                  const heartbeatTimestamp =
+                    data.heartbeat?.[key]?.timestamp || 0;
+                  const esCritico = sensorData.temperatura >= 34;
 
                   return (
                     <div
                       key={key}
-                      onClick={() => setSelectedSala({ id: key, ...value })}
+                      onClick={() =>
+                        setSelectedSala({ id: key, ...sensorData })
+                      }
                       className={`relative p-4 md:p-8 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
                     ${
                       esCritico
@@ -179,7 +190,7 @@ export default function App() {
                           </h3>
                         </div>
                         {/* INDICADOR DE CONEXIÓN */}
-                        <StatusIndicator timestamp={value.timestamp} />
+                        <StatusIndicator timestamp={heartbeatTimestamp} />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 my-2">
@@ -189,7 +200,7 @@ export default function App() {
                               esCritico ? "text-red-600" : "dark:text-white"
                             }`}
                           >
-                            {value.temperatura?.toFixed(1)}
+                            {sensorData.temperatura?.toFixed(1)}
                             <span className="text-xs md:text-2xl font-bold ml-2">
                               ° C
                             </span>
@@ -207,7 +218,7 @@ export default function App() {
 
                         <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
                           <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
-                            {value.humedad?.toFixed(1)}
+                            {sensorData.humedad?.toFixed(1)}
                             <span className="text-xs md:text-2xl font-bold ml-2">
                               %
                             </span>
@@ -241,23 +252,39 @@ export default function App() {
 
       {/* MODAL */}
       {selectedSala && (
-        <div className="block md:hidden fixed inset-0 z-50 items-end sm:items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-4xl overflow-hidden animate-in slide-in-from-bottom">
-            <div className="p-8 text-center">
-              <h2 className="text-xl font-black uppercase mb-6">
-                Estadísticas {selectedSala.id}
-              </h2>
-              <div className="h-40 bg-slate-50 dark:bg-slate-800 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 mb-6">
-                <FaChartLine size={32} className="text-slate-300 mb-2" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Próximamente
-                </p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-all">
+          {/* Contenedor del Modal */}
+          <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="p-6 md:p-8">
+              {/* Cabecera */}
+              <header className="flex justify-between items-center mb-6">
+                <div className="text-left">
+                  <h2 className="text-xl font-black uppercase tracking-tighter text-slate-800 dark:text-white">
+                    Análisis // {selectedSala.id.replace("_", " ")}
+                  </h2>
+                  <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">
+                    Monitoreo en tiempo real
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedSala(null)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
+                  <FaTimes className="text-slate-400" />
+                </button>
+              </header>
+
+              {/* Área de la Gráfica */}
+              <div className="mb-8 bg-slate-50 dark:bg-slate-950/50 rounded-3xl p-4 border border-slate-100 dark:border-slate-800">
+                <GraficasTiempoReal salaId={selectedSala.id} />
               </div>
+
+              {/* Botón de acción */}
               <button
                 onClick={() => setSelectedSala(null)}
-                className="w-full py-4 bg-blue-600 text-white font-black uppercase rounded-xl"
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase rounded-2xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98]"
               >
-                Cerrar
+                Finalizar Revisión
               </button>
             </div>
           </div>
@@ -266,3 +293,57 @@ export default function App() {
     </div>
   );
 }
+
+// exports.verificarConexionSensores = onSchedule(
+//   "every 1 minutes",
+//   async (event) => {
+//     const db = admin.database();
+//     const ahora = Date.now();
+//     const MARGEN_TIEMPO = 90000; // 90s
+
+//     const rootSnap = await db.ref("/").get();
+//     if (!rootSnap.exists()) return;
+//     const data = rootSnap.val();
+
+//     const { botToken, receptores } = data.configuracion?.telegram || {};
+//     if (!botToken || !receptores) return;
+
+//     const sensores = data.sensores || {};
+//     const alertas = data.alertas || {};
+//     let updatesAlertas = {};
+
+//     for (const salaId in sensores) {
+//       if (salaId.startsWith("Sala_")) {
+//         const ultimoUpdate = sensores[salaId].timestamp || 0;
+//         const estaOnlineAhora = ahora - ultimoUpdate < MARGEN_TIEMPO;
+//         const estadoPrevioOnline = alertas[salaId]?.online !== false;
+
+//         if (!estaOnlineAhora && estadoPrevioOnline) {
+//           await enviarTelegram(
+//             botToken,
+//             receptores,
+//             `🔴 *DISPOSITIVO DESCONECTADO*\n📍 *${salaId.replace(
+//               "_",
+//               " "
+//             )}*\n⚠️ El sensor no reporta hace más de 2 min.`
+//           );
+//           updatesAlertas[`${salaId}/online`] = false;
+//         } else if (estaOnlineAhora && !estadoPrevioOnline) {
+//           await enviarTelegram(
+//             botToken,
+//             receptores,
+//             `🟢 *DISPOSITIVO RECONECTADO*\n📍 *${salaId.replace(
+//               "_",
+//               " "
+//             )}*\n✅ El sensor volvió a reportar datos.`
+//           );
+//           updatesAlertas[`${salaId}/online`] = true;
+//         }
+//       }
+//     }
+
+//     if (Object.keys(updatesAlertas).length > 0) {
+//       await db.ref("/alertas").update(updatesAlertas);
+//     }
+//   }
+// );

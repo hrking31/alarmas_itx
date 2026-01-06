@@ -325,13 +325,34 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// --- FUNCIÓN DE AYUDA PARA TELEGRAM ---
-const enviarTelegram = async (botToken, receptores, texto) => {
-  const fechaHora = new Date().toLocaleString("es-CO", {
+// FUNCIÓN DE TIEMPO
+function obtenerFechaHoraCO() {
+  const now = new Date();
+
+  const fecha = now.toLocaleDateString("sv-SE", {
+    timeZone: "America/Bogota",
+  });
+
+  const horaMinuto = now
+    .toLocaleTimeString("sv-SE", {
+      timeZone: "America/Bogota",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    .replace(":", "-");
+
+  const fechaHoraTexto = now.toLocaleString("es-CO", {
     timeZone: "America/Bogota",
     hour12: true,
   });
-  const mensajeFinal = `${texto}\n⏰ ${fechaHora}`;
+
+  return { fecha, horaMinuto, fechaHoraTexto };
+}
+
+// FUNCIÓN DE TELEGRAM
+const enviarTelegram = async (botToken, receptores, texto) => {
+  const { fechaHoraTexto } = obtenerFechaHoraCO();
+  const mensajeFinal = `${texto}\n⏰ ${fechaHoraTexto}`;
 
   return Promise.all(
     receptores.map((r) =>
@@ -350,11 +371,10 @@ const enviarTelegram = async (botToken, receptores, texto) => {
 
 // MONITOREO DE TEMPERATURA
 exports.notificarTemperatura = onValueUpdated(
-  "/sensores/{salaId}",
+  "/sensores/{salaId}/temperatura",
   async (event) => {
     const db = admin.database();
     const salaId = event.params.salaId;
-    const dataNueva = event.data.after.val();
 
     if (!salaId.startsWith("Sala_") || !dataNueva) return;
 
@@ -371,7 +391,7 @@ exports.notificarTemperatura = onValueUpdated(
       ? alertasSnap.val().estado
       : "baja";
 
-    const tempActual = dataNueva.temperatura;
+    const tempActual = event.data.after.val();
     if (typeof tempActual !== "number") return;
 
     if (tempActual > alto && estadoAnterior !== "alta") {
@@ -398,7 +418,7 @@ exports.notificarTemperatura = onValueUpdated(
   }
 );
 
-// 2. MONITOREO DE ENERGÍA (AC Y GENERADOR)
+// MONITOREO DE ENERGÍA (AC Y GENERADOR)
 exports.notificarEnergia = onValueUpdated("/{tipoEnergia}", async (event) => {
   const tipo = event.params.tipoEnergia; // Puede ser "Ac" o "Planta"
   if (tipo !== "Ac" && tipo !== "Planta") return;
@@ -410,7 +430,7 @@ exports.notificarEnergia = onValueUpdated("/{tipoEnergia}", async (event) => {
   const { botToken, receptores } = configSnap.val() || {};
   if (!botToken || !receptores) return;
 
-  const alertasRef = db.ref(`/alertas/globales/${tipo}Estado`);
+  const alertasRef = db.ref(`/alertas/${tipo}Estado`);
   const alertasSnap = await alertasRef.get();
   const estadoGuardado = alertasSnap.val();
 
@@ -433,7 +453,7 @@ exports.notificarEnergia = onValueUpdated("/{tipoEnergia}", async (event) => {
   await alertasRef.set(estadoActual);
 });
 
-// 3. VERIFICACIÓN DE CONEXIÓN (SCHEDULER)
+// VERIFICACIÓN DE CONEXIÓN (SCHEDULER)
 exports.verificarConexionSensores = onSchedule(
   "every 1 minutes",
   async (event) => {
@@ -441,15 +461,20 @@ exports.verificarConexionSensores = onSchedule(
     const ahora = Date.now();
     const MARGEN_TIEMPO = 90000; // 90s
 
-    const rootSnap = await db.ref("/").get();
-    if (!rootSnap.exists()) return;
-    const data = rootSnap.val();
+    const [sensoresSnap, alertasSnap, configSnap] = await Promise.all([
+      db.ref("heartbeat").get(),
+      db.ref("alertas").get(),
+      db.ref("configuracion/telegram").get(),
+    ]);
 
-    const { botToken, receptores } = data.configuracion?.telegram || {};
+    const config = configSnap.val() || {};
+    const { botToken, receptores } = config;
+
+    // Si no hay Telegram configurado, salimos
     if (!botToken || !receptores) return;
 
-    const sensores = data.sensores || {};
-    const alertas = data.alertas || {};
+    const sensores = sensoresSnap.val() || {};
+    const alertas = alertasSnap.val() || {};
     let updatesAlertas = {};
 
     for (const salaId in sensores) {
