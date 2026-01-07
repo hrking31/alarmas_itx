@@ -117,7 +117,7 @@ export default function App() {
         <section className="xl:col-span-4 tv:col-span-5! flex flex-col gap-4">
           <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 h-full tv:h-auto">
             <div className="flex justify-between items-start">
-              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4  flex items-center gap-2">
+              <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 md:mb-0 flex items-center gap-2">
                 <MdOutlinePower size={16} className="text-blue-500" />{" "}
                 Suministro Eléctrico RCA SBL
               </h2>
@@ -125,7 +125,7 @@ export default function App() {
               <StatusIndicator timestamp={AcPlanta} />
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-3 md:gap-6 place-content-evenly h-full tv:h-auto">
+            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-3 place-content-evenly md:h-full tv:h-auto">
               <div
                 className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
                   !redCorte
