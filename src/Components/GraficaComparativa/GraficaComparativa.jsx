@@ -74,8 +74,8 @@ useEffect(() => {
 
 
   return (
-    <div className="w-full h-full min-h-87.5 p-2">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-full p-2">
+       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={datosGrafica}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}

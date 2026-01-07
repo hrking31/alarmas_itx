@@ -75,7 +75,7 @@ export default function App() {
   const AcPlanta = heartbeat?.AcPlanta?.timestamp;
 
   return (
-    <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-hidden">
+    <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
       {/* HEADER - Más compacto en móvil */}
       <header className="w-full mx-auto px-4 md:px-10 flex justify-between items-center shrink-0 pt-2">
         <button
@@ -112,11 +112,10 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT - Ajustado para llenar el espacio restante (flex-1) */}
-      {/* <main className="flex-1 mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12 overflow-y-auto md:overflow-hidden"> */}
-      <main className="mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12">
+      <main className="flex-1 mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12 md:overflow-hidden">
         {/* PANEL ENERGÍA - Más delgado en móvil */}
-        <section className="xl:col-span-4 flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800">
+        <section className="xl:col-span-4 tv:col-span-5! flex flex-col gap-4">
+          <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 h-full tv:h-auto">
             <div className="flex justify-between items-start">
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4  flex items-center gap-2">
                 <MdOutlinePower size={16} className="text-blue-500" />{" "}
@@ -126,7 +125,7 @@ export default function App() {
               <StatusIndicator timestamp={AcPlanta} />
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-1 gap-3 md:gap-6">
+            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-3 md:gap-6 place-content-evenly h-full tv:h-auto">
               <div
                 className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
                   !redCorte
@@ -185,7 +184,7 @@ export default function App() {
           </div>
 
           {/* Estadísticas solo para TV (XL) */}
-          <section className="hidden xl:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <section className="hidden tv:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="mb-4 ml-2">
               <h3 className="text-slate-800 dark:text-white font-black text-sm uppercase">
                 Comparativo Global
@@ -208,9 +207,8 @@ export default function App() {
         </section>
 
         {/* PANEL SALAS */}
-        <section className="xl:col-span-8 flex flex-col">
-          {/* <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 h-full"> */}
-          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10">
+        <section className="xl:col-span-8 tv:col-span-7! flex flex-col">
+          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 xl:h-full">
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const esCritico = dataSensores.temperatura >= umbrales.alto;
@@ -220,7 +218,7 @@ export default function App() {
                 <div
                   key={sala}
                   onClick={() => setSelectedSala({ id: sala, ...dataSensores })}
-                  className={`relative p-4 md:p-8 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
+                  className={`relative p-4 rounded-3xl md:rounded-[3.5rem] shadow-lg md:shadow-2xl transition-all border-2 flex flex-col justify-between 
                     ${
                       esCritico
                         ? "bg-red-50 border-red-500 dark:bg-red-950/40 dark:border-red-600 md:animate-pulse"

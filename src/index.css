@@ -3,22 +3,41 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  /* --- BREAKPOINTS PERSONALIZADOS --- */
+  --breakpoint-tv: 1800px;
+
   /* Animación de loading */
   @keyframes loading-bar {
-    0% { transform: translateX(-100%); }
-    50% { transform: translateX(0%); }
-    100% { transform: translateX(100%); }
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
   }
 
   /* Animación de notificaciones */
   @keyframes slide-in {
-    0% { transform: translateY(20px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    0% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   @keyframes progress {
-    0% { width: 100%; }
-    100% { width: 0%; }
+    0% {
+      width: 100%;
+    }
+    100% {
+      width: 0%;
+    }
   }
 
   /* Registro de clases de animación */
@@ -37,7 +56,7 @@
     background: transparent;
   }
 
-   .scrollbar-custom::-webkit-scrollbar-thumb {
+  .scrollbar-custom::-webkit-scrollbar-thumb {
     @apply bg-slate-300 dark:bg-slate-800 rounded-full border border-transparent;
     background-clip: content-box;
   }
@@ -47,7 +66,7 @@
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
   }
 
-   .animate-loading-bar {
+  .animate-loading-bar {
     animation: loading-bar 1.5s infinite ease-in-out;
   }
 }
