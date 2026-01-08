@@ -66,7 +66,7 @@ useEffect(() => {
       a.hora.localeCompare(b.hora)
     );
 
-    setDatosGrafica(listaOrdenada.slice(-60)); // Últimos 60 puntos
+    setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
   });
 
   return () => unsubscribe();
