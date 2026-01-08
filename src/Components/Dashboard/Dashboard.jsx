@@ -296,9 +296,12 @@ export default function App() {
 
       <Footer />
 
-      {/* MODAL */}
+      {/* MODAL GRFICA */}
       {selectedSala && (
-        <div className="fixed inset-0 z-50 flex  items-center justify-center p-2 bg-slate-950/80 backdrop-blur-sm transition-all">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-slate-950/80 backdrop-blur-sm transition-all   [@media(max-height:500px)]:items-start
+  [@media(max-height:500px)]:p-0 overflow-y-auto"
+        >
           {/* Contenedor del Modal */}
           <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800">
             <div className="px-4 py-6 md:p-8">
@@ -322,7 +325,7 @@ export default function App() {
               </header>
 
               {/* Área de la Gráfica */}
-              <div className="bg-slate-300/50 dark:bg-slate-950/50 rounded-3xl p-4 border border-slate-300/50 dark:border-slate-800">
+              <div className=" bg-slate-300/50 dark:bg-slate-950/50 rounded-3xl md:p-4 border border-slate-300/50 dark:border-slate-800">
                 <GraficasTiempoReal salaId={selectedSala.id} />
               </div>
             </div>
