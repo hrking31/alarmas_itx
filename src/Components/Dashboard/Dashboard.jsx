@@ -81,12 +81,12 @@ export default function App() {
         <button
           type="button"
           onClick={() => navigate("/ViewLogin")}
-          className="flex items-center gap-3 md:gap-4 group focus:outline-none"
+          className="flex items-center gap-1 group focus:outline-none"
         >
           <img
             src={logo}
             alt="Alarmas ITX"
-            className="w-10 h-10 md:w-14 md:h-14 object-contain transition-transform duration-200 group-hover:scale-105"
+            className="w-16 h-10 md:w-20 md:h-14 object-contain transition-transform duration-200 group-hover:scale-105"
           />
 
           <div className="text-left">
@@ -208,7 +208,7 @@ export default function App() {
 
         {/* PANEL SALAS */}
         <section className="xl:col-span-8 tv:col-span-7! flex flex-col">
-          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 xl:h-full">
+          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 md:h-full">
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const esCritico = dataSensores.temperatura >= umbrales.alto;
@@ -278,11 +278,13 @@ export default function App() {
                   </div>
 
                   {esCritico && (
-                    <div className="py-1 md:py-3 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center md:animate-pulse uppercase tracking-wider">
-                      <span className="md:hidden">Fuera de rango</span>{" "}
-                      <span className="hidden md:inline">
-                        Temperatura fuera de rango
-                      </span>
+                    <div className="sm:px-6 md:px-8">
+                      <div className="w-full p-1 md:p-2 bg-red-600 text-white rounded-lg md:rounded-2xl text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-center md:animate-pulse uppercase tracking-wider">
+                        <span className="md:hidden">Fuera de rango</span>
+                        <span className="hidden md:inline">
+                          Temperatura fuera de rango
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
