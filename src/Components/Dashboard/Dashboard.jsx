@@ -125,7 +125,7 @@ export default function App() {
               <StatusIndicator timestamp={AcPlanta} />
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-3 place-content-evenly md:h-full tv:h-auto">
+            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-4 md:p-3 md:pb-8 md:h-full tv:h-auto">
               <div
                 className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
                   !redCorte
