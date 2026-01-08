@@ -86,7 +86,7 @@ export default function App() {
           <img
             src={logo}
             alt="Alarmas ITX"
-            className="w-16 h-10 md:w-20 md:h-14 object-contain transition-transform duration-200 group-hover:scale-105"
+            className="w-auto h-10 md:h-16 object-contain transition-transform duration-200 group-hover:scale-105"
           />
 
           <div className="text-left">
@@ -112,9 +112,9 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT - Ajustado para llenar el espacio restante (flex-1) */}
-      <main className="flex-1 mx-auto w-full p-4 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-12 md:overflow-hidden">
+      <main className="flex-1 mx-auto w-full p-4 md:p-10 flex flex-col xl:grid xl:grid-cols-12 gap-4 md:gap-12 md:overflow-hidden">
         {/* PANEL ENERGÍA - Más delgado en móvil */}
-        <section className="xl:col-span-4 tv:col-span-5! flex flex-col gap-4">
+        <section className="flex-1 xl:flex-none xl:col-span-4 tv:col-span-5! flex flex-col gap-4">
           <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 h-full tv:h-auto">
             <div className="flex justify-between items-start">
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 md:mb-0 flex items-center gap-2">
@@ -154,20 +154,20 @@ export default function App() {
               </div>
 
               <div
-                className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
+                className={`flex flex-col items-center justify-center rounded-2xl md:rounded-4xl border-2 ${
                   !plantaEncendida
                     ? "bg-amber-50/50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800"
                     : "bg-orange-50 border-red-500 dark:bg-orange-900/30"
                 }`}
               >
-                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-0 lg:gap-4 xl:gap-0 2xl:gap-4 text-center md:text-left">
-                  <Generador
-                    className={`w-15 h-15 md:w-30 md:h-30 ${
-                      !plantaEncendida
-                        ? "text-amber-400"
-                        : "text-red-500 md:animate-pulse"
-                    }`}
-                  />
+                <Generador
+                  className={`w-15 h-15 md:w-30 md:h-30 ${
+                    !plantaEncendida
+                      ? "text-amber-400"
+                      : "text-red-500 md:animate-pulse"
+                  }`}
+                />
+                <div className="flex flex-col items-center text-center">
                   <span className="font-black text-[10px] md:text-sm uppercase italic">
                     GENERADOR
                   </span>
@@ -207,8 +207,8 @@ export default function App() {
         </section>
 
         {/* PANEL SALAS */}
-        <section className="xl:col-span-8 tv:col-span-7! flex flex-col">
-          <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 md:gap-10 md:h-full">
+        <section className="flex-1 xl:flex-none xl:col-span-8 tv:col-span-7! flex flex-col">
+          <div className="grid grid-cols-2 gap-3 md:gap-10 flex-1">
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const esCritico = dataSensores.temperatura >= umbrales.alto;
@@ -225,7 +225,7 @@ export default function App() {
                         : "bg-white border-white dark:bg-slate-900 dark:border-slate-800 active:scale-95"
                     }`}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start md:m-4">
                     <div className="flex flex-col">
                       <h3 className="text-sm md:text-3xl font-black uppercase tracking-tighter dark:text-white truncate pr-2">
                         {nombreSala}
