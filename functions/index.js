@@ -4,25 +4,12 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// FUNCIÓN DE TIEMPO
-function obtenerFechaHoraCO() {
-  const now = new Date();
-
-  const fecha = now.toLocaleDateString("sv-SE", {
-    timeZone: "America/Bogota",
-  });
-
-  const fechaHoraTexto = now.toLocaleString("es-CO", {
+// FUNCIÓN DE TELEGRAM
+const enviarTelegram = async (botToken, receptores, texto) => {
+  const fechaHoraTexto = new Date().toLocaleString("es-CO", {
     timeZone: "America/Bogota",
     hour12: true,
   });
-
-  return { fecha, fechaHoraTexto };
-}
-
-// FUNCIÓN DE TELEGRAM
-const enviarTelegram = async (botToken, receptores, texto) => {
-  const { fechaHoraTexto } = obtenerFechaHoraCO();
   const mensajeFinal = `${texto}\n⏰ ${fechaHoraTexto}`;
 
   return Promise.all(
@@ -176,11 +163,7 @@ exports.verificarConexionSensores = onSchedule(
 
         if (!estaOnlineAhora && estadoPrevioOnline) {
           // Envia "null" al nodo grafica
-          const { fecha } = obtenerFechaHoraCO();
-          await db.ref(`grafica/${salaId}/${fecha}/${ahora}`).set({
-            t: " null",
-          });
-
+          await db.ref(`grafica/${salaId}`).push({ ts: ahora, t: "null" });
           await enviarTelegram(
             botToken,
             receptores,

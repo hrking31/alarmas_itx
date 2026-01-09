@@ -14,33 +14,70 @@ import { database } from "../../Firebase/Firebase.js";
 export default function GraficaTiempoReal({ salaId }) {
   const [datos, setDatos] = useState([]);
 
+  // useEffect(() => {
+  //   // Obtener la fecha de hoy para el nodo
+  //   const hoyLocal = new Date()
+  //     .toLocaleString("sv-SE", {
+  //       timeZone: "America/Bogota",
+  //     })
+  //     .split(" ")[0];
+
+  //   const historialRef = ref(database, `grafica/${salaId}/${hoyLocal}`);
+
+  //   //Traer los últimos 60 puntos (la última hora)
+  //   const consulta = query(historialRef, limitToLast(60));
+
+  //   // Escuchar cada vez que sensor escriba un punto nuevo
+  //   const unsubscribe = onChildAdded(consulta, (snapshot) => {
+  //     const nuevaLectura = {
+  //       hora: new Date(Number(snapshot.key)).toLocaleTimeString("es-CO", {
+  //         hour: "numeric",
+  //         minute: "2-digit",
+  //       }),
+
+  //       temp: snapshot.val().t,
+  //     };
+
+  //     setDatos((prev) => {
+  //       // Evitamos duplicados por el StrictMode de React
+  //       if (prev.find((d) => d.hora === nuevaLectura.hora)) return prev;
+  //       return [...prev, nuevaLectura];
+  //     });
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [salaId]);
+
   useEffect(() => {
-    // Obtener la fecha de hoy para el nodo
-    const hoyLocal = new Date()
-      .toLocaleString("sv-SE", {
-        timeZone: "America/Bogota",
-      })
-      .split(" ")[0];
+    const historialRef = ref(database, `grafica/${salaId}`);
 
-    const historialRef = ref(database, `grafica/${salaId}/${hoyLocal}`);
-
-    //Traer los últimos 60 puntos (la última hora)
+    // Últimos 60 puntos ( última hora )
     const consulta = query(historialRef, limitToLast(60));
 
-    // Escuchar cada vez que sensor escriba un punto nuevo
     const unsubscribe = onChildAdded(consulta, (snapshot) => {
+      const registro = snapshot.val();
+      if (!registro?.ts || registro.t === undefined) return;
+
+      const fecha = new Date(registro.ts);
+
       const nuevaLectura = {
-        hora: new Date(Number(snapshot.key)).toLocaleTimeString("es-CO", {
+        hora: fecha.toLocaleTimeString("es-CO", {
+          timeZone: "America/Bogota",
           hour: "numeric",
           minute: "2-digit",
         }),
-
-        temp: snapshot.val().t,
+        temp: registro.t,
       };
 
       setDatos((prev) => {
-        // Evitamos duplicados por el StrictMode de React
-        if (prev.find((d) => d.hora === nuevaLectura.hora)) return prev;
+        // Evitar duplicados (StrictMode React)
+        if (
+          prev.some(
+            (d) => d.hora === nuevaLectura.hora && d.temp === nuevaLectura.temp
+          )
+        ) {
+          return prev;
+        }
         return [...prev, nuevaLectura];
       });
     });
@@ -48,9 +85,9 @@ export default function GraficaTiempoReal({ salaId }) {
     return () => unsubscribe();
   }, [salaId]);
 
-  console.log("gra", datos);
+
   return (
-    <div className="w-full h-80 bg-slate-950 p-4 rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
+    <div className="w-full h-80 bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={datos}>
           <defs>

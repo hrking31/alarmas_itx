@@ -23,13 +23,69 @@ const COLORES_SALAS = {
 export default function GraficaComparativa() {
   const [datosGrafica, setDatosGrafica] = useState([]);
 
-useEffect(() => {
-  // Fecha de hoy
-  const hoyLocal = new Date()
-    .toLocaleString("sv-SE", { timeZone: "America/Bogota" })
-    .split(" ")[0];
+// useEffect(() => {
+//   // Fecha de hoy
+//   const hoyLocal = new Date()
+//     .toLocaleString("sv-SE", { timeZone: "America/Bogota" })
+//     .split(" ")[0];
 
-  const historialRef = ref(database, `grafica`);
+//   const historialRef = ref(database, `grafica`);
+
+//   const unsubscribe = onValue(historialRef, (snapshot) => {
+//     const data = snapshot.val();
+//     if (!data) return;
+
+//     const mapaPorHora = {};
+
+//     Object.keys(data).forEach((salaId) => {
+//       const registrosDia = data[salaId]?.[hoyLocal];
+//       if (registrosDia) {
+//         Object.keys(registrosDia).forEach((ts) => {
+//           const registro = registrosDia[ts];
+//           const fecha = new Date(Number(ts)); // timestamp en ms → Date
+
+//           // Hora en formato HH:MM
+//           const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
+//             timeZone: "America/Bogota",
+//             hour: "2-digit",
+//             minute: "2-digit",
+//           });
+
+//           // 12h para mostrar en la gráfica
+//           const etiqueta12h = fecha.toLocaleTimeString("en-US", {
+//             timeZone: "America/Bogota",
+//             hour: "numeric", // "3" en lugar de "03"
+//             minute: "2-digit",
+//             hour12: true,
+//           });
+
+//           if (!mapaPorHora[horaFormateada]) {
+//             mapaPorHora[horaFormateada] = {
+//               horaRaw: horaFormateada,
+//               hora: etiqueta12h,
+//             };
+//           }
+
+//           // Asignamos la temperatura
+//           mapaPorHora[horaFormateada][salaId] = registro.t;
+//         });
+//       }
+//     });
+
+//     // Convertimos a array y ordenamos
+//     const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
+//       a.horaRaw.localeCompare(b.horaRaw)
+//     );
+
+
+//     setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
+//   });
+
+//   return () => unsubscribe();
+// }, []);
+
+useEffect(() => {
+  const historialRef = ref(database, "grafica");
 
   const unsubscribe = onValue(historialRef, (snapshot) => {
     const data = snapshot.val();
@@ -37,54 +93,57 @@ useEffect(() => {
 
     const mapaPorHora = {};
 
+    // Recorremos salas
     Object.keys(data).forEach((salaId) => {
-      const registrosDia = data[salaId]?.[hoyLocal];
-      if (registrosDia) {
-        Object.keys(registrosDia).forEach((ts) => {
-          const registro = registrosDia[ts];
-          const fecha = new Date(Number(ts)); // timestamp en ms → Date
+      const registrosSala = data[salaId];
+      if (!registrosSala) return;
 
-          // Hora en formato HH:MM
-          const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
-            timeZone: "America/Bogota",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+      // Recorremos push IDs
+      Object.values(registrosSala).forEach((registro) => {
+        if (!registro?.ts || registro.t === undefined) return;
 
-          // 12h para mostrar en la gráfica
-          const etiqueta12h = fecha.toLocaleTimeString("en-US", {
-            timeZone: "America/Bogota",
-            hour: "numeric", // "3" en lugar de "03"
-            minute: "2-digit",
-            hour12: true,
-          });
+        const fecha = new Date(registro.ts);
 
-          if (!mapaPorHora[horaFormateada]) {
-            mapaPorHora[horaFormateada] = {
-              horaRaw: horaFormateada,
-              hora: etiqueta12h,
-            };
-          }
-
-          // Asignamos la temperatura
-          mapaPorHora[horaFormateada][salaId] = registro.t;
+        // HH:MM para agrupar
+        const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
+          timeZone: "America/Bogota",
+          hour: "2-digit",
+          minute: "2-digit",
         });
-      }
+
+        // 12h para mostrar
+        const etiqueta12h = fecha.toLocaleTimeString("en-US", {
+          timeZone: "America/Bogota",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+
+        if (!mapaPorHora[horaFormateada]) {
+          mapaPorHora[horaFormateada] = {
+            horaRaw: horaFormateada,
+            hora: etiqueta12h,
+          };
+        }
+
+        // Cada sala es una serie distinta
+        mapaPorHora[horaFormateada][salaId] = registro.t;
+      });
     });
 
-    // Convertimos a array y ordenamos
+    // Ordenar por hora
     const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
       a.horaRaw.localeCompare(b.horaRaw)
     );
 
-
-    setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
+    // Últimas 8 horas 
+    setDatosGrafica(listaOrdenada.slice(-480));
   });
 
   return () => unsubscribe();
 }, []);
 
-console.log("gra",datosGrafica);
+
   return (
     <div className="w-full h-full p-2">
        <ResponsiveContainer width="100%" height="100%">

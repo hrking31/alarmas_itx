@@ -194,8 +194,7 @@ export default function App() {
                   Todas las salas en tiempo real
                 </p>
                 <span className="text-[9px] text-slate-400 font-bold uppercase">
-                  Umbrales: {umbrales?.alto ?? "--"}°C /{" "}
-                  {umbrales?.bajo ?? "--"}°C
+                  Umbral: {umbrales?.alto ?? "--"}°C
                 </span>
               </div>
             </div>
@@ -312,8 +311,7 @@ export default function App() {
                     Live Stream {selectedSala.id.replace("_", " ")}
                   </h2>
                   <span className="text-[9px] text-slate-400 font-bold uppercase">
-                    Umbrales: {umbrales?.alto ?? "--"}°C /{" "}
-                    {umbrales?.bajo ?? "--"}°C
+                    Umbral: {umbrales?.alto ?? "--"}°C
                   </span>
                 </div>
                 <button
