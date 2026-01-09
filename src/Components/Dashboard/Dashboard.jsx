@@ -304,7 +304,7 @@ export default function App() {
         >
           {/* Contenedor del Modal */}
           <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800">
-            <div className="px-4 py-6 md:p-8">
+            <div className="p-4 md:p-6">
               {/* Cabecera */}
               <header className="flex justify-between items-center mb-2">
                 <div className="text-left ml-2">

@@ -51,8 +51,19 @@ useEffect(() => {
             minute: "2-digit",
           });
 
+          // 12h para mostrar en la gráfica
+          const etiqueta12h = fecha.toLocaleTimeString("en-US", {
+            timeZone: "America/Bogota",
+            hour: "numeric", // "3" en lugar de "03"
+            minute: "2-digit",
+            hour12: true,
+          });
+
           if (!mapaPorHora[horaFormateada]) {
-            mapaPorHora[horaFormateada] = { hora: horaFormateada };
+            mapaPorHora[horaFormateada] = {
+              horaRaw: horaFormateada,
+              hora: etiqueta12h,
+            };
           }
 
           // Asignamos la temperatura
@@ -63,8 +74,9 @@ useEffect(() => {
 
     // Convertimos a array y ordenamos
     const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
-      a.hora.localeCompare(b.hora)
+      a.horaRaw.localeCompare(b.horaRaw)
     );
+
 
     setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
   });
@@ -72,7 +84,7 @@ useEffect(() => {
   return () => unsubscribe();
 }, []);
 
-
+console.log("gra",datosGrafica);
   return (
     <div className="w-full h-full p-2">
        <ResponsiveContainer width="100%" height="100%">
@@ -112,14 +124,14 @@ useEffect(() => {
             dataKey="hora"
             stroke="#475569"
             fontSize={10}
-            tickLine={false}
+            // tickLine={false}
           />
           <YAxis
             width={40}
             stroke="#475569"
             fontSize={10}
             domain={["auto", "auto"]}
-            tickLine={false}
+            // tickLine={false}
           />
           <Tooltip
             contentStyle={{

@@ -24,14 +24,14 @@ export default function GraficaTiempoReal({ salaId }) {
 
     const historialRef = ref(database, `grafica/${salaId}/${hoyLocal}`);
 
-    //Traer los últimos 60 puntos (la última hora) para no saturar al inicio
+    //Traer los últimos 60 puntos (la última hora)
     const consulta = query(historialRef, limitToLast(60));
 
     // Escuchar cada vez que sensor escriba un punto nuevo
     const unsubscribe = onChildAdded(consulta, (snapshot) => {
       const nuevaLectura = {
         hora: new Date(Number(snapshot.key)).toLocaleTimeString("es-CO", {
-          hour: "2-digit",
+          hour: "numeric",
           minute: "2-digit",
         }),
 
@@ -48,6 +48,7 @@ export default function GraficaTiempoReal({ salaId }) {
     return () => unsubscribe();
   }, [salaId]);
 
+  console.log("gra", datos);
   return (
     <div className="w-full h-80 bg-slate-950 p-4 rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
       <ResponsiveContainer width="100%" height="100%">
@@ -70,16 +71,16 @@ export default function GraficaTiempoReal({ salaId }) {
             dataKey="hora"
             stroke="#475569"
             fontSize={10}
-            tickLine={false}
-            axisLine={false}
+            // tickLine={false}
+            // axisLine={false}
           />
 
           <YAxis
             width={30}
             stroke="#475569"
             fontSize={10}
-            tickLine={false}
-            axisLine={false}
+            // tickLine={false}
+            // axisLine={false}
             domain={["auto", "auto"]}
           />
 
