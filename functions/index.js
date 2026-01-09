@@ -7,7 +7,6 @@ admin.initializeApp();
 // FUNCIÓN DE TIEMPO
 function obtenerFechaHoraCO() {
   const now = new Date();
-  const timestamp = now.getTime();
 
   const fecha = now.toLocaleDateString("sv-SE", {
     timeZone: "America/Bogota",
@@ -18,7 +17,7 @@ function obtenerFechaHoraCO() {
     hour12: true,
   });
 
-  return { fecha, timestamp, fechaHoraTexto };
+  return { fecha, fechaHoraTexto };
 }
 
 // FUNCIÓN DE TELEGRAM
@@ -48,45 +47,65 @@ exports.notificarTemperatura = onValueUpdated(
     const db = admin.database();
     const salaId = event.params.salaId;
 
-    if (!salaId.startsWith("Sala_") || !dataNueva) return;
+    // OBTENCIÓN DE DATOS Y FILTRO DE CAMBIO
+    const tempActual = event.data.after.val();
+    const tempPrevia = event.data.before.val();
 
-    const configSnap = await db.ref("/configuracion").get();
+    // Si no es una sala, no hay datos o la temperatura no cambió, salimos
+    if (
+      !salaId.startsWith("Sala_") ||
+      tempActual === null ||
+      tempActual === tempPrevia
+    ) {
+      return null;
+    }
+
+    // CARGA EN PARALELO (Configuración y Estado de Alerta)
+    const [configSnap, alertasSnap] = await Promise.all([
+      db.ref("/configuracion").get(),
+      db.ref(`/alertas/${salaId}`).get(),
+    ]);
+
     const config = configSnap.val();
     const { botToken, receptores } = config?.telegram || {};
-    const { alto, bajo } = config?.umbrales || {};
+    const alto = config?.umbrales?.alto;
 
-    if (!botToken || !receptores) return;
+    if (!botToken || !receptores || alto === undefined) return null;
 
-    const alertasRef = db.ref(`/alertas/${salaId}`);
-    const alertasSnap = await alertasRef.get();
     const estadoAnterior = alertasSnap.exists()
       ? alertasSnap.val().estado
       : "baja";
+    const nombreSala = salaId.replace("_", " ");
 
-    const tempActual = event.data.after.val();
-    if (typeof tempActual !== "number") return;
-
+    // LÓGICA TEMPERATURA
+    // Entra en Alerta
     if (tempActual > alto && estadoAnterior !== "alta") {
-      await enviarTelegram(
-        botToken,
-        receptores,
-        `⚠️ *ALERTA TEMP. ALTA*\n📍 *${salaId.replace(
-          "_",
-          " "
-        )}*\n🌡️ *${tempActual.toFixed(1)}°C*`
-      );
-      await alertasRef.update({ estado: "alta" });
-    } else if (tempActual <= bajo && estadoAnterior === "alta") {
-      await enviarTelegram(
-        botToken,
-        receptores,
-        `✅ *TEMP. NORMALIZADA*\n📍 *${salaId.replace(
-          "_",
-          " "
-        )}*\n🌡️ *${tempActual.toFixed(1)}°C*`
-      );
-      await alertasRef.update({ estado: "baja" });
+      const mensaje = `⚠️ *ALERTA TEMP. ALTA*\n📍 *${nombreSala}*\n🌡️ *${tempActual.toFixed(
+        1
+      )}°C*`;
+
+      await Promise.all([
+        enviarTelegram(botToken, receptores, mensaje),
+        db.ref(`/alertas/${salaId}`).update({
+          estado: "alta",
+        }),
+      ]);
     }
+    // Normalización (Al bajar del umbral)
+    else if (tempActual <= alto && estadoAnterior === "alta") {
+      const mensaje = `✅ *TEMP. NORMALIZADA*\n📍 *${nombreSala}*\n🌡️ *${tempActual.toFixed(
+        1
+      )}°C*`;
+
+      await Promise.all([
+        enviarTelegram(botToken, receptores, mensaje),
+        db.ref(`/alertas/${salaId}`).update({
+          estado: "baja",
+        }),
+      ]);
+    }
+
+    return null;
   }
 );
 
@@ -156,8 +175,9 @@ exports.verificarConexionSensores = onSchedule(
         const estadoPrevioOnline = alertas[salaId]?.online !== false;
 
         if (!estaOnlineAhora && estadoPrevioOnline) {
-          const { fecha, timestamp } = obtenerFechaHoraCO();
-          await db.ref(`grafica/${salaId}/${fecha}/${timestamp}`).set({
+          // Envia "null" al nodo grafica
+          const { fecha } = obtenerFechaHoraCO();
+          await db.ref(`grafica/${salaId}/${fecha}/${ahora}`).set({
             t: " null",
           });
 
