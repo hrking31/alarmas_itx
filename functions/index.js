@@ -47,7 +47,7 @@ exports.notificarTemperatura = onValueUpdated(
       return null;
     }
 
-    // CARGA EN PARALELO (Configuración y Estado de Alerta)
+      // CARGA EN PARALELO (Configuración y Estado de Alerta)
     const [configSnap, alertasSnap] = await Promise.all([
       db.ref("/configuracion").get(),
       db.ref(`/alertas/${salaId}`).get(),
@@ -55,7 +55,7 @@ exports.notificarTemperatura = onValueUpdated(
 
     const config = configSnap.val();
     const { botToken, receptores } = config?.telegram || {};
-    const alto = config?.umbrales?.alto;
+    const alto = config?.umbral?.alto;
 
     if (!botToken || !receptores || alto === undefined) return null;
 

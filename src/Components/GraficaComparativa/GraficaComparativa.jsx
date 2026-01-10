@@ -153,7 +153,7 @@ export default function GraficaComparativa() {
         a.horaRaw.localeCompare(b.horaRaw)
       );
 
-      // Últimas 8 horas
+      // Últimas N horas para mostrar
       setDatosGrafica(listaOrdenada.slice(-puntos));
     });
 
