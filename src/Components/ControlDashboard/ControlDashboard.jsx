@@ -11,6 +11,7 @@ import {
   FaTemperatureHigh,
   FaTimes,
   FaUsers,
+  FaChartLine,
 } from "react-icons/fa";
 import { useAuth } from "../../Context/AuthContext.jsx";
 import { useAppContext } from "../../Context/AppContext";
@@ -30,7 +31,7 @@ export default function ControlDashboard() {
   const [chatId, setChatId] = useState("");
   const [chatList, setChatList] = useState([]);
   const [tempMax, setTempMax] = useState("");
-  const [tempMin, setTempMin] = useState("");
+  const [horasMax, setHorasMax] = useState("");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -51,8 +52,8 @@ export default function ControlDashboard() {
           setIsTokenSaved(false);
         }
         setChatList(data.telegram?.receptores || []);
-        setTempMax(data.umbrales?.alto || "");
-        setTempMin(data.umbrales?.bajo || "");
+        setTempMax(data.umbral?.alto || "");
+        setHorasMax(data.horas?.visible || "");
       }
       setLoading(false);
     });
@@ -138,16 +139,30 @@ export default function ControlDashboard() {
     }
   };
 
-  // Guardar Umbrales (tempMax y tempMin)
+  // Guardar Umbral tempMax
   const handleSaveThresholds = async (e) => {
     e.preventDefault();
     try {
-      await update(ref(database, "configuracion/umbrales"), {
+      await update(ref(database, "configuracion/umbral"), {
         alto: Number(tempMax),
-        bajo: Number(tempMin),
       });
 
-      showNotif("success", "Protocolo: Umbrales actualizados correctamente");
+      showNotif("success", "Protocolo: Umbral alto actualizado correctamente");
+    } catch (error) {
+      console.error(error);
+      showNotif("error", "Fallo en la conexión con la base de datos");
+    }
+  };
+
+  // Guardar Horas visibles
+  const handleSaveHours = async (e) => {
+    e.preventDefault();
+    try {
+      await update(ref(database, "configuracion/horas"), {
+        visible: Number(horasMax),
+      });
+
+      showNotif("success", "Protocolo: Horas visibles actualizado correctamente");
     } catch (error) {
       console.error(error);
       showNotif("error", "Fallo en la conexión con la base de datos");
@@ -236,7 +251,7 @@ export default function ControlDashboard() {
       {/* ÁREA DE CONFIGURACIÓN */}
       <div className="flex-1 grid grid-cols-12 w-full mx-auto px-4 pt-4 md:pb-4 md:px-10 gap-4 md:items-center">
         {/* SECCIÓN TOKEN */}
-        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-emerald-500/30 transition-all">
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 md:row-start-1 lg:col-span-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-emerald-500/30 transition-all">
           <div className="flex items-center gap-3 mb-2">
             <FaKey className="text-emerald-500" />
             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
@@ -283,7 +298,7 @@ export default function ControlDashboard() {
           )}
         </section>
         {/* SECCIÓN UMBRALES TEMP */}
-        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-orange-500/30 transition-all">
+        {/* <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-orange-500/30 transition-all">
           <div className="flex items-center gap-3 mb-2">
             <FaTemperatureHigh className="text-orange-500" />
             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
@@ -318,10 +333,85 @@ export default function ControlDashboard() {
               </button>
             </div>
           </form>
+        </section> */}
+        {/* SECCIÓN ALERTAS TEMPERATURA */}
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-6 md:col-span-6 md:row-2 lg:col-span-3 lg:row-auto bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
+          <div className="flex items-center gap-3 mb-2">
+            <FaTemperatureHigh className="text-orange-500" />
+            <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+              Alertas Temp.
+            </h2>
+          </div>
+
+          <form
+            onSubmit={handleSaveThresholds}
+            className="flex flex-col flex-1 justify-evenly gap-2"
+          >
+            <div className="flex gap-4">
+              <input
+                type="number"
+                value={tempMax}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^\d*\.?\d*$/.test(val)) {
+                    setTempMax(val);
+                  }
+                }}
+                placeholder="Máx °C"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            <div className="flex flex-col ">
+              <button className="mt-auto w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
+                Actualizar Rangos
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* SECCIÓN VISUALIZACIÓN GRÁFICA */}
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-6 md:col-span-6 md:row-2 lg:col-span-3 lg:row-auto bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
+          <div className="flex items-center gap-3 mb-2">
+            <FaChartLine className="text-yellow-500" />
+            <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
+              Horas vis.
+            </h2>
+          </div>
+
+          <form
+            onSubmit={handleSaveHours}
+            className="flex flex-col flex-1 justify-evenly gap-2"
+          >
+            <div className="flex gap-4">
+              <input
+                type="number"
+                value={horasMax}
+                onChange={(e) => {
+                  let val = Number(e.target.value);
+                  if (val < 1) val = 1;
+                  if (val > 48) val = 48;
+
+                  setHorasMax(val);
+                }}
+                min={1} // Previene que el usuario baje del 1
+                max={48} // Previene que el usuario suba más de 48
+                step={1} // Solo enteros
+                placeholder="Horas"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            <div className="flex flex-col ">
+              <button className="mt-auto w-full bg-yellow-600 hover:bg-yellow-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
+                Actualizar Horas
+              </button>
+            </div>
+          </form>
         </section>
 
         {/* SECCIÓN NUEVO RECEPTOR */}
-        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-12 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
+        <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 md:row-auto lg:col-span-3 lg:row-auto bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
           <div className="flex items-center gap-3 mb-2">
             <FaUserPlus className="text-blue-500" />
             <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">

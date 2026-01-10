@@ -19,7 +19,8 @@ export default function App() {
   const navigate = useNavigate();
   const { darkMode, setDarkMode } = useDarkMode();
   const [sensores, setSensores] = useState(null);
-  const [umbrales, setUmbrales] = useState(null);
+  const [umbral, setUmbral] = useState(null);
+  const [horas, setHoras] = useState(null);
   const [heartbeat, setHeartbeat] = useState(null);
   const [ac, setAc] = useState(0);
   const [planta, setPlanta] = useState(0);
@@ -30,7 +31,8 @@ export default function App() {
   useEffect(() => {
     try {
       const sensoresRef = ref(database, "sensores");
-      const umbralesRef = ref(database, "configuracion/umbrales");
+      const umbralRef = ref(database, "configuracion/umbral");
+      const horasRef = ref(database, "configuracion/horas");
       const heartbeatRef = ref(database, "heartbeat");
       const acRef = ref(database, "Ac");
       const plantaRef = ref(database, "Planta");
@@ -39,8 +41,12 @@ export default function App() {
         if (snap.exists()) setSensores(snap.val());
       });
 
-      const unsubUmbrales = onValue(umbralesRef, (snap) => {
-        if (snap.exists()) setUmbrales(snap.val());
+      const unsubUmbral = onValue(umbralRef, (snap) => {
+        if (snap.exists()) setUmbral(snap.val());
+      });
+
+      const unsubHoras = onValue(horasRef, (snap) => {
+        if (snap.exists()) setHoras(snap.val());
       });
 
       const unsubHeartbeat = onValue(heartbeatRef, (snap) => {
@@ -59,7 +65,8 @@ export default function App() {
 
       return () => {
         unsubSensores();
-        unsubUmbrales();
+        unsubUmbral();
+        unsubHoras();
         unsubHeartbeat();
         unsubAc();
         unsubPlanta();
@@ -194,7 +201,8 @@ export default function App() {
                   Todas las salas en tiempo real
                 </p>
                 <span className="text-[9px] text-slate-400 font-bold uppercase">
-                  Umbral: {umbrales?.alto ?? "--"}°C
+                  Umbral: {umbral?.alto ?? "--"}°C / Horas:{" "}
+                  {horas?.visible ?? "--"}h
                 </span>
               </div>
             </div>
@@ -210,7 +218,8 @@ export default function App() {
           <div className="grid grid-cols-2 gap-3 md:gap-10 flex-1">
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
-              const esCritico = dataSensores.temperatura >= umbrales.alto;
+              const esCritico =
+                dataSensores.temperatura >= (umbral?.alto ?? Infinity);
               const nombreSala = sala.replace("_", " ");
 
               return (
@@ -311,7 +320,7 @@ export default function App() {
                     Live Stream {selectedSala.id.replace("_", " ")}
                   </h2>
                   <span className="text-[9px] text-slate-400 font-bold uppercase">
-                    Umbral: {umbrales?.alto ?? "--"}°C
+                    Umbral: {umbral?.alto ?? "--"}°C
                   </span>
                 </div>
                 <button

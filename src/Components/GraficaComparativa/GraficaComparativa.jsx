@@ -22,131 +22,147 @@ const COLORES_SALAS = {
 
 export default function GraficaComparativa() {
   const [datosGrafica, setDatosGrafica] = useState([]);
+  const [horas, setHoras] = useState(1);
 
-// useEffect(() => {
-//   // Fecha de hoy
-//   const hoyLocal = new Date()
-//     .toLocaleString("sv-SE", { timeZone: "America/Bogota" })
-//     .split(" ")[0];
+  // useEffect(() => {
+  //   // Fecha de hoy
+  //   const hoyLocal = new Date()
+  //     .toLocaleString("sv-SE", { timeZone: "America/Bogota" })
+  //     .split(" ")[0];
 
-//   const historialRef = ref(database, `grafica`);
+  //   const historialRef = ref(database, `grafica`);
 
-//   const unsubscribe = onValue(historialRef, (snapshot) => {
-//     const data = snapshot.val();
-//     if (!data) return;
+  //   const unsubscribe = onValue(historialRef, (snapshot) => {
+  //     const data = snapshot.val();
+  //     if (!data) return;
 
-//     const mapaPorHora = {};
+  //     const mapaPorHora = {};
 
-//     Object.keys(data).forEach((salaId) => {
-//       const registrosDia = data[salaId]?.[hoyLocal];
-//       if (registrosDia) {
-//         Object.keys(registrosDia).forEach((ts) => {
-//           const registro = registrosDia[ts];
-//           const fecha = new Date(Number(ts)); // timestamp en ms → Date
+  //     Object.keys(data).forEach((salaId) => {
+  //       const registrosDia = data[salaId]?.[hoyLocal];
+  //       if (registrosDia) {
+  //         Object.keys(registrosDia).forEach((ts) => {
+  //           const registro = registrosDia[ts];
+  //           const fecha = new Date(Number(ts)); // timestamp en ms → Date
 
-//           // Hora en formato HH:MM
-//           const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
-//             timeZone: "America/Bogota",
-//             hour: "2-digit",
-//             minute: "2-digit",
-//           });
+  //           // Hora en formato HH:MM
+  //           const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
+  //             timeZone: "America/Bogota",
+  //             hour: "2-digit",
+  //             minute: "2-digit",
+  //           });
 
-//           // 12h para mostrar en la gráfica
-//           const etiqueta12h = fecha.toLocaleTimeString("en-US", {
-//             timeZone: "America/Bogota",
-//             hour: "numeric", // "3" en lugar de "03"
-//             minute: "2-digit",
-//             hour12: true,
-//           });
+  //           // 12h para mostrar en la gráfica
+  //           const etiqueta12h = fecha.toLocaleTimeString("en-US", {
+  //             timeZone: "America/Bogota",
+  //             hour: "numeric", // "3" en lugar de "03"
+  //             minute: "2-digit",
+  //             hour12: true,
+  //           });
 
-//           if (!mapaPorHora[horaFormateada]) {
-//             mapaPorHora[horaFormateada] = {
-//               horaRaw: horaFormateada,
-//               hora: etiqueta12h,
-//             };
-//           }
+  //           if (!mapaPorHora[horaFormateada]) {
+  //             mapaPorHora[horaFormateada] = {
+  //               horaRaw: horaFormateada,
+  //               hora: etiqueta12h,
+  //             };
+  //           }
 
-//           // Asignamos la temperatura
-//           mapaPorHora[horaFormateada][salaId] = registro.t;
-//         });
-//       }
-//     });
+  //           // Asignamos la temperatura
+  //           mapaPorHora[horaFormateada][salaId] = registro.t;
+  //         });
+  //       }
+  //     });
 
-//     // Convertimos a array y ordenamos
-//     const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
-//       a.horaRaw.localeCompare(b.horaRaw)
-//     );
+  //     // Convertimos a array y ordenamos
+  //     const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
+  //       a.horaRaw.localeCompare(b.horaRaw)
+  //     );
 
+  //     setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
+  //   });
 
-//     setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
-//   });
+  //   return () => unsubscribe();
+  // }, []);
 
-//   return () => unsubscribe();
-// }, []);
+  // Leer configuración de horas desde Firebase
+  useEffect(() => {
+    const horasRef = ref(database, "configuracion/horas/visible");
+    const unsubscribe = onValue(horasRef, (snapshot) => {
+      const value = Number(snapshot.val());
+      if (!isNaN(value) && value > 0) {
+        setHoras(value);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-useEffect(() => {
-  const historialRef = ref(database, "grafica");
+  // Calcular puntos según horas visibles y frecuencia ESP
+  const intervaloSegundos = 60;
+  const puntos = Math.ceil((horas * 3600) / intervaloSegundos);
 
-  const unsubscribe = onValue(historialRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+  // Leer datos de la gráfica
+  useEffect(() => {
+    const historialRef = ref(database, "grafica");
 
-    const mapaPorHora = {};
+    const unsubscribe = onValue(historialRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
 
-    // Recorremos salas
-    Object.keys(data).forEach((salaId) => {
-      const registrosSala = data[salaId];
-      if (!registrosSala) return;
+      const mapaPorHora = {};
 
-      // Recorremos push IDs
-      Object.values(registrosSala).forEach((registro) => {
-        if (!registro?.ts || registro.t === undefined) return;
+      // Recorremos salas
+      Object.keys(data).forEach((salaId) => {
+        const registrosSala = data[salaId];
+        if (!registrosSala) return;
 
-        const fecha = new Date(registro.ts);
+        // Recorremos push IDs
+        Object.values(registrosSala).forEach((registro) => {
+          if (!registro?.ts || registro.t === undefined) return;
 
-        // HH:MM para agrupar
-        const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
-          timeZone: "America/Bogota",
-          hour: "2-digit",
-          minute: "2-digit",
+          const fecha = new Date(registro.ts);
+
+          // HH:MM para agrupar
+          const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
+            timeZone: "America/Bogota",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          // 12h para mostrar
+          const etiqueta12h = fecha.toLocaleTimeString("en-US", {
+            timeZone: "America/Bogota",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          if (!mapaPorHora[horaFormateada]) {
+            mapaPorHora[horaFormateada] = {
+              horaRaw: horaFormateada,
+              hora: etiqueta12h,
+            };
+          }
+
+          // Cada sala es una serie distinta
+          mapaPorHora[horaFormateada][salaId] = registro.t;
         });
-
-        // 12h para mostrar
-        const etiqueta12h = fecha.toLocaleTimeString("en-US", {
-          timeZone: "America/Bogota",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        });
-
-        if (!mapaPorHora[horaFormateada]) {
-          mapaPorHora[horaFormateada] = {
-            horaRaw: horaFormateada,
-            hora: etiqueta12h,
-          };
-        }
-
-        // Cada sala es una serie distinta
-        mapaPorHora[horaFormateada][salaId] = registro.t;
       });
+
+      // Ordenar por hora
+      const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
+        a.horaRaw.localeCompare(b.horaRaw)
+      );
+
+      // Últimas 8 horas
+      setDatosGrafica(listaOrdenada.slice(-puntos));
     });
 
-    // Ordenar por hora
-    const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
-      a.horaRaw.localeCompare(b.horaRaw)
-    );
-
-    // Últimas 8 horas 
-    setDatosGrafica(listaOrdenada.slice(-480));
-  });
-
-  return () => unsubscribe();
-}, []);
-
+    return () => unsubscribe();
+  }, [horas]);
 
   return (
     <div className="w-full h-full p-2">
-       <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={datosGrafica}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -186,7 +202,7 @@ useEffect(() => {
             // tickLine={false}
           />
           <YAxis
-            width={40}
+            width={50}
             stroke="#475569"
             fontSize={10}
             domain={["auto", "auto"]}
