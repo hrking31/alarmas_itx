@@ -10,9 +10,12 @@ import {
 } from "recharts";
 import { ref, onChildAdded, query, limitToLast } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
+import { useDarkMode } from "../../Context/DarkModeContext";
 
 export default function GraficaTiempoReal({ salaId }) {
   const [datos, setDatos] = useState([]);
+  const { darkMode } = useDarkMode();
+  const isDark = darkMode;
 
   // useEffect(() => {
   //   // Obtener la fecha de hoy para el nodo
@@ -85,9 +88,8 @@ export default function GraficaTiempoReal({ salaId }) {
     return () => unsubscribe();
   }, [salaId]);
 
-
   return (
-    <div className="w-full h-80 bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
+    <div className="w-full h-80 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={datos}>
           <defs>
@@ -123,16 +125,16 @@ export default function GraficaTiempoReal({ salaId }) {
 
           <Tooltip
             contentStyle={{
-              backgroundColor: "#0f172a",
+              backgroundColor: isDark ? "#0f172a" : "#ffffff",
               border: "1px solid #1e293b",
               borderRadius: "8px",
             }}
             labelStyle={{
-              color: "#e5e7eb",
+              color: isDark ? "#cbd5f5" : "#475569",
               fontSize: 12,
               fontWeight: "bold",
             }}
-            itemStyle={{ color: "#22d3ee", fontWeight: "bold" }}
+            itemStyle={{ fontWeight: "bold" }}
           />
 
           <Area

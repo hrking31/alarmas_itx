@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { ref, onValue } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
+import { useDarkMode } from "../../Context/DarkModeContext";
 
 // Colores neón para identificar cada sala
 const COLORES_SALAS = {
@@ -23,6 +24,8 @@ const COLORES_SALAS = {
 export default function GraficaComparativa() {
   const [datosGrafica, setDatosGrafica] = useState([]);
   const [horas, setHoras] = useState(1);
+  const { darkMode } = useDarkMode();
+  const isDark = darkMode;
 
   // useEffect(() => {
   //   // Fecha de hoy
@@ -84,7 +87,7 @@ export default function GraficaComparativa() {
   //   return () => unsubscribe();
   // }, []);
 
-  // Leer configuración de horas desde Firebase
+  //Leer configuración de horas visibles desde Firebase
   useEffect(() => {
     const horasRef = ref(database, "configuracion/horas/visible");
     const unsubscribe = onValue(horasRef, (snapshot) => {
@@ -96,7 +99,7 @@ export default function GraficaComparativa() {
     return () => unsubscribe();
   }, []);
 
-  // Calcular puntos según horas visibles y frecuencia ESP
+  // Calcular puntos según horas visibles y frecuencia envio ESP
   const intervaloSegundos = 60;
   const puntos = Math.ceil((horas * 3600) / intervaloSegundos);
 
@@ -108,52 +111,36 @@ export default function GraficaComparativa() {
       const data = snapshot.val();
       if (!data) return;
 
-      const mapaPorHora = {};
+      const mapa = {};
 
-      // Recorremos salas
       Object.keys(data).forEach((salaId) => {
-        const registrosSala = data[salaId];
-        if (!registrosSala) return;
-
-        // Recorremos push IDs
-        Object.values(registrosSala).forEach((registro) => {
+        Object.values(data[salaId] || {}).forEach((registro) => {
           if (!registro?.ts || registro.t === undefined) return;
 
-          const fecha = new Date(registro.ts);
+          // minuto real
+          const minutoTs = Math.floor(registro.ts / 60000) * 60000;
+          const fecha = new Date(minutoTs);
 
-          // HH:MM para agrupar
-          const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
-            timeZone: "America/Bogota",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-          // 12h para mostrar
-          const etiqueta12h = fecha.toLocaleTimeString("en-US", {
-            timeZone: "America/Bogota",
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-          });
-
-          if (!mapaPorHora[horaFormateada]) {
-            mapaPorHora[horaFormateada] = {
-              horaRaw: horaFormateada,
-              hora: etiqueta12h,
+          if (!mapa[minutoTs]) {
+            mapa[minutoTs] = {
+              ts: minutoTs,
+              hora: fecha.toLocaleTimeString("en-US", {
+                timeZone: "America/Bogota",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              }),
             };
           }
 
-          // Cada sala es una serie distinta
-          mapaPorHora[horaFormateada][salaId] = registro.t;
+          mapa[minutoTs][salaId] = registro.t;
         });
       });
 
-      // Ordenar por hora
-      const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
-        a.horaRaw.localeCompare(b.horaRaw)
-      );
+      // ordenar por timestamp REAL
+      const listaOrdenada = Object.values(mapa).sort((a, b) => a.ts - b.ts);
 
-      // Últimas N horas para mostrar
+      // últimas N horas visibles
       setDatosGrafica(listaOrdenada.slice(-puntos));
     });
 
@@ -210,16 +197,16 @@ export default function GraficaComparativa() {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#0f172a",
+              backgroundColor: isDark ? "#0f172a" : "#ffffff",
               border: "1px solid #1e293b",
               borderRadius: "12px",
             }}
             labelStyle={{
-              color: "#e5e7eb",
+              color: isDark ? "#cbd5f5" : "#475569",
               fontSize: 12,
               fontWeight: "bold",
             }}
-            itemStyle={{ fontSize: "11px", fontWeight: "bold" }}
+            itemStyle={{ fontWeight: "bold" }}
           />
           <Legend
             iconType="circle"

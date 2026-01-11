@@ -7,7 +7,7 @@ export default function Footer() {
 
   if (isDashboard) {
     return (
-      <footer className="py-2 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] shrink-0">
+      <footer className="py-2 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sm:tracking-[0.4em] shrink-0 ">
         © {new Date().getFullYear()} ITX Infrastructure Control System
         <p className="mt-1 text-[10px] font-normal tracking-normal normal-case text-gray-500">
           Desarrollado por Hernando Rey
