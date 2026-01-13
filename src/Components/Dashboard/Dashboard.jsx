@@ -28,9 +28,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
-
-
   const [isPortrait, setIsPortrait] = useState(
     window.matchMedia("(orientation: portrait)").matches
   );
@@ -326,11 +323,15 @@ export default function App() {
 
       {/* MODAL GRFICA */}
       {selectedSala && (
-        <div className="w-full h-full fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm transition-all">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm transition-all">
           {/* Contenedor del Modal */}
-          <div className="bg-white dark:bg-slate-900 w-full h-full rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800">
+          <div
+            className={`bg-white dark:bg-slate-900 w-screen  rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800 ${
+              isPortrait ? "max-w-2xl" : "h-screen"
+            }
+        `}
+          >
             <div className="p-3 md:p-6 h-full flex flex-col">
-              {/* Cabecera */}
               <header className="flex justify-between items-center mb-2 shrink-0">
                 <div className="text-left ml-2">
                   <h2 className="text-cyan-400 font-black text-xl tracking-tighter uppercase">
@@ -349,7 +350,10 @@ export default function App() {
               </header>
 
               <div className="flex-1 bg-slate-300/50 dark:bg-slate-950/50 rounded-3xl p-2 md:p-4 border border-slate-300/50 dark:border-slate-800 overflow-hidden">
-                <GraficasTiempoReal salaId={selectedSala.id} />
+                <GraficasTiempoReal
+                  salaId={selectedSala.id}
+                  isPortrait={isPortrait}
+                />
               </div>
             </div>
           </div>

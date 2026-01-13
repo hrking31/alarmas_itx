@@ -12,7 +12,7 @@ import { ref, onChildAdded, query, limitToLast } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import { useDarkMode } from "../../Context/DarkModeContext";
 
-export default function GraficaTiempoReal({ salaId }) {
+export default function GraficaTiempoReal({ salaId, isPortrait }) {
   const [datos, setDatos] = useState([]);
   const { darkMode } = useDarkMode();
   const isDark = darkMode;
@@ -89,7 +89,12 @@ export default function GraficaTiempoReal({ salaId }) {
   }, [salaId]);
 
   return (
-    <div className="w-full h-80 md:h-full bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
+    <div
+      className={`w-full bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5 ${
+        isPortrait ? "h-80" : "h-full"
+      }
+        `}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={datos} accessibilityLayer={false}>
           <defs>
