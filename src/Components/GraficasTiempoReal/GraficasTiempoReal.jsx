@@ -89,9 +89,9 @@ export default function GraficaTiempoReal({ salaId }) {
   }, [salaId]);
 
   return (
-    <div className="w-full h-80 bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
+    <div className="w-full h-80 md:h-full bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={datos}>
+        <AreaChart data={datos} accessibilityLayer={false}>
           <defs>
             {/* Gradiente para el efecto neón debajo de la línea */}
             <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
@@ -124,6 +124,11 @@ export default function GraficaTiempoReal({ salaId }) {
           />
 
           <Tooltip
+            cursor={{
+              stroke: "#06b6d4",
+              strokeWidth: 1,
+              strokeDasharray: "4 4",
+            }}
             contentStyle={{
               backgroundColor: isDark ? "#0f172a" : "#ffffff",
               border: "1px solid #1e293b",
@@ -148,6 +153,7 @@ export default function GraficaTiempoReal({ salaId }) {
             animationDuration={1000}
             connectNulls={false}
             dot={{ r: 1 }}
+            style={{ pointerEvents: "none" }}
           />
         </AreaChart>
       </ResponsiveContainer>

@@ -152,6 +152,7 @@ export default function GraficaComparativa() {
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={datosGrafica}
+          accessibilityLayer={false}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
         >
           <defs>
@@ -196,6 +197,11 @@ export default function GraficaComparativa() {
             // tickLine={false}
           />
           <Tooltip
+            cursor={{
+              stroke: "#06b6d4",
+              strokeWidth: 1,
+              strokeDasharray: "4 4",
+            }}
             contentStyle={{
               backgroundColor: isDark ? "#0f172a" : "#ffffff",
               border: "1px solid #1e293b",
@@ -225,6 +231,7 @@ export default function GraficaComparativa() {
               connectNulls={false}
               dot={{ r: 1 }}
               isAnimationActive={false}
+              style={{ pointerEvents: "none" }}
             />
           ))}
         </AreaChart>
