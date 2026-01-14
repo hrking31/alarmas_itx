@@ -326,8 +326,8 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm transition-all">
           {/* Contenedor del Modal */}
           <div
-            className={`bg-white dark:bg-slate-900 w-screen  rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800 ${
-              isPortrait ? "max-w-2xl" : "h-screen"
+            className={`bg-white dark:bg-slate-900 w-screen overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl border border-slate-200 dark:border-slate-800 ${
+              isPortrait ? "max-w-2xl rounded-[2.5rem]" : "h-screen"
             }
         `}
           >
