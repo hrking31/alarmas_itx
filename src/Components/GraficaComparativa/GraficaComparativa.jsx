@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue} from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import { useDarkMode } from "../../Context/DarkModeContext";
 
@@ -27,67 +27,7 @@ export default function GraficaComparativa() {
   const { darkMode } = useDarkMode();
   const isDark = darkMode;
 
-  // useEffect(() => {
-  //   // Fecha de hoy
-  //   const hoyLocal = new Date()
-  //     .toLocaleString("sv-SE", { timeZone: "America/Bogota" })
-  //     .split(" ")[0];
-
-  //   const historialRef = ref(database, `grafica`);
-
-  //   const unsubscribe = onValue(historialRef, (snapshot) => {
-  //     const data = snapshot.val();
-  //     if (!data) return;
-
-  //     const mapaPorHora = {};
-
-  //     Object.keys(data).forEach((salaId) => {
-  //       const registrosDia = data[salaId]?.[hoyLocal];
-  //       if (registrosDia) {
-  //         Object.keys(registrosDia).forEach((ts) => {
-  //           const registro = registrosDia[ts];
-  //           const fecha = new Date(Number(ts)); // timestamp en ms → Date
-
-  //           // Hora en formato HH:MM
-  //           const horaFormateada = fecha.toLocaleTimeString("sv-SE", {
-  //             timeZone: "America/Bogota",
-  //             hour: "2-digit",
-  //             minute: "2-digit",
-  //           });
-
-  //           // 12h para mostrar en la gráfica
-  //           const etiqueta12h = fecha.toLocaleTimeString("en-US", {
-  //             timeZone: "America/Bogota",
-  //             hour: "numeric", // "3" en lugar de "03"
-  //             minute: "2-digit",
-  //             hour12: true,
-  //           });
-
-  //           if (!mapaPorHora[horaFormateada]) {
-  //             mapaPorHora[horaFormateada] = {
-  //               horaRaw: horaFormateada,
-  //               hora: etiqueta12h,
-  //             };
-  //           }
-
-  //           // Asignamos la temperatura
-  //           mapaPorHora[horaFormateada][salaId] = registro.t;
-  //         });
-  //       }
-  //     });
-
-  //     // Convertimos a array y ordenamos
-  //     const listaOrdenada = Object.values(mapaPorHora).sort((a, b) =>
-  //       a.horaRaw.localeCompare(b.horaRaw)
-  //     );
-
-  //     setDatosGrafica(listaOrdenada.slice(-480)); // Últimas 8 horas
-  //   });
-
-  //   return () => unsubscribe();
-  // }, []);
-
-  //Leer configuración de horas visibles desde Firebase
+  // Leer configuración de horas visibles
   useEffect(() => {
     const horasRef = ref(database, "configuracion/horas/visible");
     const unsubscribe = onValue(horasRef, (snapshot) => {
@@ -99,25 +39,35 @@ export default function GraficaComparativa() {
     return () => unsubscribe();
   }, []);
 
-  // Calcular puntos según horas visibles y frecuencia envio ESP
-  const intervaloSegundos = 60;
-  const puntos = Math.ceil((horas * 3600) / intervaloSegundos);
-
-  // Leer datos de la gráfica
+  // Leer datos de la gráfica con FILTRO DE TIEMPO REAL
   useEffect(() => {
     const historialRef = ref(database, "grafica");
 
+    // Cálculo del tiempo de corte (Ahora - N horas)
+    const ahora = Date.now();
+    const tiempoCorte = ahora - horas * 3600 * 1000;
+
+    // Nota: Para filtrar múltiples salas simultáneamente en la raíz "grafica",
+    // Firebase requiere que cada hijo tenga un índice. Si no puedes indexar todo,
     const unsubscribe = onValue(historialRef, (snapshot) => {
       const data = snapshot.val();
-      if (!data) return;
+      if (!data) {
+        setDatosGrafica([]);
+        return;
+      }
 
       const mapa = {};
 
       Object.keys(data).forEach((salaId) => {
         Object.values(data[salaId] || {}).forEach((registro) => {
-          if (!registro?.ts || registro.t === undefined) return;
+          // Solo incluir si el ts es mayor al tiempo de corte
+          if (
+            !registro?.ts ||
+            registro.ts < tiempoCorte ||
+            registro.t === undefined
+          )
+            return;
 
-          // minuto real
           const minutoTs = Math.floor(registro.ts / 60000) * 60000;
           const fecha = new Date(minutoTs);
 
@@ -125,23 +75,19 @@ export default function GraficaComparativa() {
             mapa[minutoTs] = {
               ts: minutoTs,
               hora: fecha.toLocaleTimeString("en-US", {
-                timeZone: "America/Bogota",
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
               }),
             };
           }
-
           mapa[minutoTs][salaId] = registro.t;
         });
       });
 
-      // ordenar por timestamp REAL
+      // Ordenar por timestamp real
       const listaOrdenada = Object.values(mapa).sort((a, b) => a.ts - b.ts);
-
-      // últimas N horas visibles
-      setDatosGrafica(listaOrdenada.slice(-puntos));
+      setDatosGrafica(listaOrdenada);
     });
 
     return () => unsubscribe();

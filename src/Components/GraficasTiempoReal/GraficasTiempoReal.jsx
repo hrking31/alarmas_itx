@@ -8,85 +8,72 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { ref, onChildAdded, query, limitToLast } from "firebase/database";
+import {
+  ref,
+  onValue,
+  query,
+  orderByChild,
+  startAt,
+} from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import { useDarkMode } from "../../Context/DarkModeContext";
 
 export default function GraficaTiempoReal({ salaId, isPortrait }) {
   const [datos, setDatos] = useState([]);
+  const [horas, setHoras] = useState(1);
   const { darkMode } = useDarkMode();
   const isDark = darkMode;
 
-  // useEffect(() => {
-  //   // Obtener la fecha de hoy para el nodo
-  //   const hoyLocal = new Date()
-  //     .toLocaleString("sv-SE", {
-  //       timeZone: "America/Bogota",
-  //     })
-  //     .split(" ")[0];
-
-  //   const historialRef = ref(database, `grafica/${salaId}/${hoyLocal}`);
-
-  //   //Traer los últimos 60 puntos (la última hora)
-  //   const consulta = query(historialRef, limitToLast(60));
-
-  //   // Escuchar cada vez que sensor escriba un punto nuevo
-  //   const unsubscribe = onChildAdded(consulta, (snapshot) => {
-  //     const nuevaLectura = {
-  //       hora: new Date(Number(snapshot.key)).toLocaleTimeString("es-CO", {
-  //         hour: "numeric",
-  //         minute: "2-digit",
-  //       }),
-
-  //       temp: snapshot.val().t,
-  //     };
-
-  //     setDatos((prev) => {
-  //       // Evitamos duplicados por el StrictMode de React
-  //       if (prev.find((d) => d.hora === nuevaLectura.hora)) return prev;
-  //       return [...prev, nuevaLectura];
-  //     });
-  //   });
-
-  //   return () => unsubscribe();
-  // }, [salaId]);
+  //Leer configuración de horas visibles desde Firebase
+  useEffect(() => {
+    const horasRef = ref(database, "configuracion/horas/visible");
+    const unsubscribe = onValue(horasRef, (snapshot) => {
+      const value = Number(snapshot.val());
+      if (!isNaN(value) && value > 0) {
+        setHoras(value);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const historialRef = ref(database, `grafica/${salaId}`);
 
-    // Últimos 60 puntos ( última hora )
-    const consulta = query(historialRef, limitToLast(60));
+    // Calcular el tiempo exacto de "corte" (hace N horas)
+    const ahora = Date.now();
+    const tiempoCorte = ahora - horas * 3600 * 1000;
 
-    const unsubscribe = onChildAdded(consulta, (snapshot) => {
-      const registro = snapshot.val();
-      if (!registro?.ts || registro.t === undefined) return;
+    // Nueva consulta: Ordenar por timestamp y empezar desde el tiempo de corte
+    // Esto evita traer datos de hace varios días
+    const consulta = query(
+      historialRef,
+      orderByChild("ts"),
+      startAt(tiempoCorte)
+    );
 
-      const fecha = new Date(registro.ts);
+    // Limpiamos los datos antes de suscribirnos para no mezclar con sesiones anteriores
+    setDatos([]);
 
-      const nuevaLectura = {
-        hora: fecha.toLocaleTimeString("es-CO", {
-          timeZone: "America/Bogota",
-          hour: "numeric",
-          minute: "2-digit",
-        }),
-        temp: registro.t,
-      };
+    const unsubscribe = onValue(consulta, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
 
-      setDatos((prev) => {
-        // Evitar duplicados (StrictMode React)
-        if (
-          prev.some(
-            (d) => d.hora === nuevaLectura.hora && d.temp === nuevaLectura.temp
-          )
-        ) {
-          return prev;
-        }
-        return [...prev, nuevaLectura];
-      });
+      const listaProcesada = Object.values(data)
+        .map((reg) => ({
+          ts: reg.ts,
+          hora: new Date(reg.ts).toLocaleTimeString("es-CO", {
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+          temp: reg.t,
+        }))
+        .sort((a, b) => a.ts - b.ts); // Ordenar cronológicamente
+
+      setDatos(listaProcesada);
     });
 
     return () => unsubscribe();
-  }, [salaId]);
+  }, [salaId, horas]);
 
   return (
     <div

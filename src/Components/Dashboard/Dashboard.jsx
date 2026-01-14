@@ -338,7 +338,8 @@ export default function App() {
                     Live Stream {selectedSala.id.replace("_", " ")}
                   </h2>
                   <span className="text-[9px] text-slate-400 font-bold uppercase">
-                    Umbral: {umbral?.alto ?? "--"}°C
+                    Umbral: {umbral?.alto ?? "--"}°C / Horas:{" "}
+                    {horas?.visible ?? "--"}h
                   </span>
                 </div>
                 <button

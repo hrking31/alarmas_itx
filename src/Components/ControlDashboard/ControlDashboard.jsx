@@ -297,43 +297,7 @@ export default function ControlDashboard() {
             </div>
           )}
         </section>
-        {/* SECCIÓN UMBRALES TEMP */}
-        {/* <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-12 md:col-span-6 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-orange-500/30 transition-all">
-          <div className="flex items-center gap-3 mb-2">
-            <FaTemperatureHigh className="text-orange-500" />
-            <h2 className="font-black uppercase tracking-widest text-xs text-slate-500 dark:text-slate-400">
-              Alertas Temp
-            </h2>
-          </div>
 
-          <form
-            onSubmit={handleSaveThresholds}
-            className="flex flex-col flex-1 justify-evenly gap-2"
-          >
-            <div className="flex gap-4">
-              <input
-                type="number"
-                value={tempMax}
-                onChange={(e) => setTempMax(e.target.value)}
-                placeholder="Máx °C"
-                className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              />
-              <input
-                type="number"
-                value={tempMin}
-                onChange={(e) => setTempMin(e.target.value)}
-                placeholder="Mín °C"
-                className="w-1/2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="flex flex-col ">
-              <button className="mt-auto w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
-                Actualizar Rangos
-              </button>
-            </div>
-          </form>
-        </section> */}
         {/* SECCIÓN ALERTAS TEMPERATURA */}
         <section className="flex flex-col md:max-h-80 md:min-h-65 lg:max-h-90 lg:min-h-75 col-span-6 md:col-span-6 md:row-2 lg:col-span-3 lg:row-auto bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:border-blue-500/30 transition-all">
           <div className="flex items-center gap-3 mb-2">
@@ -388,15 +352,24 @@ export default function ControlDashboard() {
                 type="number"
                 value={horasMax}
                 onChange={(e) => {
-                  let val = Number(e.target.value);
+                  const value = e.target.value;
+
+                  // Permitir borrar el input
+                  if (value === "") {
+                    setHorasMax("");
+                    return;
+                  }
+
+                  let val = Number(value);
+
                   if (val < 1) val = 1;
                   if (val > 48) val = 48;
 
                   setHorasMax(val);
                 }}
-                min={1} // Previene que el usuario baje del 1
-                max={48} // Previene que el usuario suba más de 48
-                step={1} // Solo enteros
+                min={1}
+                max={48}
+                step={1}
                 placeholder="Horas"
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
