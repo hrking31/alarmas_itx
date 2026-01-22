@@ -175,7 +175,7 @@ export default function GraficaComparativa() {
               fill={`url(#grad_${salaId})`}
               strokeWidth={2}
               connectNulls={false}
-              dot={{ r: 1 }}
+              dot={false}
               isAnimationActive={false}
               style={{ pointerEvents: "none" }}
             />
