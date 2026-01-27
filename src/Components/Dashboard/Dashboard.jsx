@@ -29,7 +29,7 @@ export default function App() {
   const [error, setError] = useState(null);
 
   const [isPortrait, setIsPortrait] = useState(
-    window.matchMedia("(orientation: portrait)").matches
+    window.matchMedia("(orientation: portrait)").matches,
   );
 
   useEffect(() => {
@@ -51,8 +51,8 @@ export default function App() {
       const umbralRef = ref(database, "configuracion/umbral");
       const horasRef = ref(database, "configuracion/horas");
       const heartbeatRef = ref(database, "heartbeat");
-      const acRef = ref(database, "Ac");
-      const plantaRef = ref(database, "Planta");
+      const acRef = ref(database, "monitoreo_energia/Ac");
+      const plantaRef = ref(database, "monitoreo_energia/Planta");
 
       const unsubSensores = onValue(sensoresRef, (snap) => {
         if (snap.exists()) setSensores(snap.val());
@@ -338,8 +338,7 @@ export default function App() {
                     Live Stream {selectedSala.id.replace("_", " ")}
                   </h2>
                   <span className="text-[9px] text-slate-400 font-bold uppercase">
-                    Umbral: {umbral?.alto ?? "--"}°C / Horas:{" "}
-                    {horas?.visible ?? "--"}h
+                    Umbral: {umbral?.alto ?? "--"}°C
                   </span>
                 </div>
                 <button

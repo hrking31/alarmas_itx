@@ -97,7 +97,7 @@ exports.notificarTemperatura = onValueUpdated(
 );
 
 // MONITOREO DE ENERGÍA (AC Y GENERADOR)
-exports.notificarEnergia = onValueUpdated("/{tipoEnergia}", async (event) => {
+exports.notificarEnergia = onValueUpdated("/monitoreo_energia/{tipoEnergia}", async (event) => {
   const tipo = event.params.tipoEnergia; // Puede ser "Ac" o "Planta"
   if (tipo !== "Ac" && tipo !== "Planta") return;
 
@@ -127,8 +127,12 @@ exports.notificarEnergia = onValueUpdated("/{tipoEnergia}", async (event) => {
         : `⚠️ *PLANTA ELÉCTRICA ENCENDIDA*\n⚙️ Status: *GENERADOR ACTIVO*`;
   }
 
+try {
   await enviarTelegram(botToken, receptores, mensaje);
   await alertasRef.set(estadoActual);
+} catch (error) {
+  console.error("Error finalizando la función:", error);
+}
 });
 
 // VERIFICACIÓN DE CONEXIÓN (SCHEDULER)

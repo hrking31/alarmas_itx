@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { ref, onValue} from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import { useDarkMode } from "../../Context/DarkModeContext";
 
@@ -39,34 +39,34 @@ export default function GraficaComparativa() {
     return () => unsubscribe();
   }, []);
 
-  // Leer datos de la gráfica con FILTRO DE TIEMPO REAL
+  // consulta solo el dia de cada sala
   useEffect(() => {
-    const historialRef = ref(database, "grafica");
-
-    // Cálculo del tiempo de corte (Ahora - N horas)
+    const hoy = new Date().toISOString().split("T")[0];
     const ahora = Date.now();
-    const tiempoCorte = ahora - horas * 3600 * 1000;
 
-    // Nota: Para filtrar múltiples salas simultáneamente en la raíz "grafica",
-    // Firebase requiere que cada hijo tenga un índice. Si no puedes indexar todo,
-    const unsubscribe = onValue(historialRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        setDatosGrafica([]);
-        return;
-      }
+    // Inicio del día
+    const inicioDia = new Date();
+    inicioDia.setHours(0, 0, 0, 0);
+    const tsInicioDia = inicioDia.getTime();
 
-      const mapa = {};
+    // Ventana deslizante dentro del día
+    const tsInicioVentana = Math.max(tsInicioDia, ahora - horas * 3600 * 1000);
 
-      Object.keys(data).forEach((salaId) => {
-        Object.values(data[salaId] || {}).forEach((registro) => {
-          // Solo incluir si el ts es mayor al tiempo de corte
-          if (
-            !registro?.ts ||
-            registro.ts < tiempoCorte ||
-            registro.t === undefined
-          )
-            return;
+    const mapa = {};
+    const unsubscribes = [];
+
+    const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
+
+    salas.forEach((salaId) => {
+      const salaDiaRef = ref(database, `grafica/${salaId}/${hoy}`);
+
+      const unsubscribe = onValue(salaDiaRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        Object.values(data).forEach((registro) => {
+          if (!registro?.ts || registro.t === undefined) return;
+          if (registro.ts < tsInicioVentana) return;
 
           const minutoTs = Math.floor(registro.ts / 60000) * 60000;
           const fecha = new Date(minutoTs);
@@ -74,23 +74,27 @@ export default function GraficaComparativa() {
           if (!mapa[minutoTs]) {
             mapa[minutoTs] = {
               ts: minutoTs,
-              hora: fecha.toLocaleTimeString("en-US", {
-                hour: "numeric",
+              hora: fecha.toLocaleTimeString("es-CO", {
+                hour: "2-digit",
                 minute: "2-digit",
                 hour12: true,
               }),
             };
           }
+
           mapa[minutoTs][salaId] = registro.t;
         });
+
+        // Ordenar y actualizar una sola estructura
+        const lista = Object.values(mapa).sort((a, b) => a.ts - b.ts);
+
+        setDatosGrafica(lista);
       });
 
-      // Ordenar por timestamp real
-      const listaOrdenada = Object.values(mapa).sort((a, b) => a.ts - b.ts);
-      setDatosGrafica(listaOrdenada);
+      unsubscribes.push(unsubscribe);
     });
 
-    return () => unsubscribe();
+    return () => unsubscribes.forEach((u) => u());
   }, [horas]);
 
   return (
