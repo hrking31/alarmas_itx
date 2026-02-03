@@ -14,6 +14,7 @@ import { useDarkMode } from "../../Context/DarkModeContext";
 import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.jsx";
 import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
 import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
+import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
 
 export default function App() {
   const navigate = useNavigate();
@@ -27,6 +28,9 @@ export default function App() {
   const [selectedSala, setSelectedSala] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(() =>
+    new Date().toLocaleDateString("sv-SE"),
+  );
 
   const [isPortrait, setIsPortrait] = useState(
     window.matchMedia("(orientation: portrait)").matches,
@@ -217,8 +221,8 @@ export default function App() {
                 <p className="text-[9px] text-slate-400 font-bold uppercase">
                   Todas las salas en tiempo real
                 </p>
-                <span className="text-[9px] text-slate-400 font-bold uppercase">
-                  Umbral: {umbral?.alto ?? "--"}°C / Horas:{" "}
+                <span className="text-[9px] text-slate-400 font-bold">
+                  UMBRAL: {umbral?.alto ?? "--"}°C / HORAS:{" "}
                   {horas?.visible ?? "--"}h
                 </span>
               </div>
@@ -333,19 +337,33 @@ export default function App() {
           >
             <div className="p-3 md:p-6 h-full flex flex-col">
               <header className="flex justify-between items-center mb-2 shrink-0">
-                <div className="text-left ml-2">
+                <div className="ml-2 flex flex-col leading-tight">
                   <h2 className="text-cyan-400 font-black text-xl tracking-tighter uppercase">
-                    Live Stream {selectedSala.id.replace("_", " ")}
+                    {fechaSeleccionada ===
+                    new Date().toLocaleDateString("sv-SE")
+                      ? "Live Stream"
+                      : "Record"}{" "}
+                    {selectedSala.id.replace("_", " ")}
                   </h2>
                   <span className="text-[9px] text-slate-400 font-bold uppercase">
                     Umbral: {umbral?.alto ?? "--"}°C
                   </span>
                 </div>
+
+                {/* Selector de fecha */}
+                <div className="flex items-center gap-2">
+                  <DateOnlyPicker
+                    fechaSeleccionada={fechaSeleccionada}
+                    setFechaSeleccionada={setFechaSeleccionada}
+                  />
+                </div>
+
+                {/* Boton de salida */}
                 <button
                   onClick={() => setSelectedSala(null)}
-                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                  className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
                 >
-                  <FaTimes className=" text-slate-400" />
+                  <FaTimes className="text-slate-400 dark:text-cyan-400" />
                 </button>
               </header>
 
@@ -353,6 +371,7 @@ export default function App() {
                 <GraficasTiempoReal
                   salaId={selectedSala.id}
                   isPortrait={isPortrait}
+                  fechaSeleccionada={fechaSeleccionada}
                 />
               </div>
             </div>

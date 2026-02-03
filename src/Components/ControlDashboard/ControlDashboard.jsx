@@ -363,12 +363,12 @@ export default function ControlDashboard() {
                   let val = Number(value);
 
                   if (val < 1) val = 1;
-                  if (val > 48) val = 48;
+                  if (val > 24) val = 24;
 
                   setHorasMax(val);
                 }}
                 min={1}
-                max={48}
+                max={24}
                 step={1}
                 placeholder="Horas"
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"

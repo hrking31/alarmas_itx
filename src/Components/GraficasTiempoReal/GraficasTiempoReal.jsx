@@ -12,16 +12,17 @@ import { ref, onValue, query, orderByChild } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import { useDarkMode } from "../../Context/DarkModeContext";
 
-export default function GraficaTiempoReal({ salaId, isPortrait }) {
+export default function GraficaTiempoReal({
+  salaId,
+  isPortrait,
+  fechaSeleccionada,
+}) {
   const [datos, setDatos] = useState([]);
-  const [fechaSeleccionada, setFechaSeleccionada] = useState(
-    new Date().toISOString().split("T")[0],
-  );
   const { darkMode } = useDarkMode();
   const isDark = darkMode;
 
   useEffect(() => {
-    // La ruta ahora apunta directamente al día seleccionado
+    // La ruta apunta directamente al día seleccionado
     const historialRef = ref(
       database,
       `grafica/${salaId}/${fechaSeleccionada}`,
@@ -38,44 +39,47 @@ export default function GraficaTiempoReal({ salaId, isPortrait }) {
         return;
       }
 
-      const listaProcesada = Object.values(data)
-        .map((reg) => ({
+      // Se convierte a array y se ordena por ts
+      const registros = Object.values(data).sort((a, b) => a.ts - b.ts);
+      const listaProcesada = [];
+      const UMBRAL_MS = 2 * 60 * 1000; // 2 minutos
+
+      registros.forEach((reg, index) => {
+        // comparar con el registro anterior
+        if (index > 0) {
+          const diferencia = reg.ts - registros[index - 1].ts;
+
+          if (diferencia > UMBRAL_MS) {
+            // Se inserta un punto null para romper la línea
+            listaProcesada.push({
+              ts: registros[index - 1].ts + 1000,
+              hora: "",
+              temp: null,
+            });
+          }
+        }
+
+        listaProcesada.push({
           ts: reg.ts,
           hora: new Date(reg.ts).toLocaleTimeString("es-CO", {
             hour: "numeric",
             minute: "2-digit",
           }),
-          temp: reg.t === "null" ? null : reg.t, // Manejo profesional de desconexiones
-        }))
-        .sort((a, b) => a.ts - b.ts);
+          temp: reg.t === "null" ? null : reg.t, // desconexiones
+        });
+      });
 
       setDatos(listaProcesada);
     });
 
     return () => unsubscribe();
-  }, [salaId, fechaSeleccionada]); // CAMBIO: Se dispara al cambiar de sala o de día
+  }, [salaId, fechaSeleccionada]); // Se dispara al cambiar de sala o de día
 
   return (
     <div
       className={`w-full bg-slate-50 dark:bg-slate-950 p-4 rounded-3xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/5 ${isPortrait ? "h-80" : "h-full"}`}
     >
-      {/* Selector de fecha */}
-      <div className="flex justify-between items-center mb-4 px-2">
-        <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">
-          Historial{" "}
-          {fechaSeleccionada === new Date().toISOString().split("T")[0]
-            ? "Tiempo Real"
-            : "Archivo"}
-        </span>
-        <input
-          type="date"
-          value={fechaSeleccionada}
-          onChange={(e) => setFechaSeleccionada(e.target.value)}
-          className="bg-slate-200 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 p-1 rounded-lg border-none focus:ring-1 focus:ring-cyan-500 outline-none"
-        />
-      </div>
-
-      <ResponsiveContainer width="100%" height="90%">
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={datos} accessibilityLayer={false}>
           <defs>
             {/* Gradiente para el efecto neón debajo de la línea */}

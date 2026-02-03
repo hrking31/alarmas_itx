@@ -41,19 +41,20 @@ export default function GraficaComparativa() {
 
   // consulta solo el dia de cada sala
   useEffect(() => {
-    const hoy = new Date().toISOString().split("T")[0];
+    const hoy = new Date().toLocaleDateString("sv-SE");
+
     const ahora = Date.now();
 
-    // Inicio del día
     const inicioDia = new Date();
     inicioDia.setHours(0, 0, 0, 0);
     const tsInicioDia = inicioDia.getTime();
 
-    // Ventana deslizante dentro del día
     const tsInicioVentana = Math.max(tsInicioDia, ahora - horas * 3600 * 1000);
 
     const mapa = {};
     const unsubscribes = [];
+    // Objeto para último timestamp procesado por cada sala
+    const ultimosTsPorSala = {};
 
     const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
 
@@ -64,9 +65,40 @@ export default function GraficaComparativa() {
         const data = snapshot.val();
         if (!data) return;
 
-        Object.values(data).forEach((registro) => {
+        // se ordenan los registros de la sala para comparar tiempos correctamente
+        const registrosOrdenados = Object.values(data).sort(
+          (a, b) => a.ts - b.ts,
+        );
+
+        registrosOrdenados.forEach((registro) => {
           if (!registro?.ts || registro.t === undefined) return;
           if (registro.ts < tsInicioVentana) return;
+
+          const UMBRAL_MS = 2 * 60 * 1000; // 2 minutos
+
+          if (ultimosTsPorSala[salaId]) {
+            const diferencia = registro.ts - ultimosTsPorSala[salaId];
+
+            if (diferencia > UMBRAL_MS) {
+              // Se crea un punto null un minuto después del último dato conocido
+              const minutoNuloTs =
+                Math.floor((ultimosTsPorSala[salaId] + 60000) / 60000) * 60000;
+
+              if (!mapa[minutoNuloTs]) {
+                const fechaNula = new Date(minutoNuloTs);
+                mapa[minutoNuloTs] = {
+                  ts: minutoNuloTs,
+                  hora: fechaNula.toLocaleTimeString("es-CO", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  }),
+                };
+              }
+              mapa[minutoNuloTs][salaId] = null; //Se agrega el corte
+            }
+          }
+          ultimosTsPorSala[salaId] = registro.ts;
 
           const minutoTs = Math.floor(registro.ts / 60000) * 60000;
           const fecha = new Date(minutoTs);
@@ -85,9 +117,7 @@ export default function GraficaComparativa() {
           mapa[minutoTs][salaId] = registro.t;
         });
 
-        // Ordenar y actualizar una sola estructura
         const lista = Object.values(mapa).sort((a, b) => a.ts - b.ts);
-
         setDatosGrafica(lista);
       });
 
