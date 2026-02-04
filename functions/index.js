@@ -22,8 +22,8 @@ const enviarTelegram = async (botToken, receptores, texto) => {
           text: mensajeFinal,
           parse_mode: "Markdown",
         }),
-      }).catch((e) => console.error(`Error enviando a ${r.id}:`, e))
-    )
+      }).catch((e) => console.error(`Error enviando a ${r.id}:`, e)),
+    ),
   );
 };
 
@@ -33,31 +33,31 @@ exports.notificarTemperatura = onValueUpdated(
   async (event) => {
     const db = admin.database();
     const salaId = event.params.salaId;
+    const salasPermitidas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
+
+    if (!salasPermitidas.includes(salaId)) return;
 
     // OBTENCIÓN DE DATOS Y FILTRO DE CAMBIO
     const tempActual = event.data.after.val();
     const tempPrevia = event.data.before.val();
 
     // Si no es una sala, no hay datos o la temperatura no cambió, salimos
-    if (
-      !salaId.startsWith("Sala_") ||
-      tempActual === null ||
-      tempActual === tempPrevia
-    ) {
+    if (tempActual === null || tempActual === tempPrevia) {
       return null;
     }
 
-      // CARGA EN PARALELO (Configuración y Estado de Alerta)
-    const [configSnap, alertasSnap] = await Promise.all([
-      db.ref("/configuracion").get(),
+    // CARGA EN PARALELO (Configuración y Estado de Alerta)
+    const [configSnap, umbralSnap, alertasSnap] = await Promise.all([
+      db.ref("/configuracion/telegram").get(),
+      db.ref("/configuracion/umbral/alto").get(),
       db.ref(`/alertas/${salaId}`).get(),
     ]);
 
-    const config = configSnap.val();
-    const { botToken, receptores } = config?.telegram || {};
-    const alto = config?.umbral?.alto;
+    const configTelegram = configSnap.val() || {};
+    const { botToken, receptores } = configTelegram;
+    const alto = umbralSnap.val() || {};
 
-    if (!botToken || !receptores || alto === undefined) return null;
+    if (!botToken || !receptores || alto === undefined) return null; // Si no hay Telegram, umbral configurado, salimos
 
     const estadoAnterior = alertasSnap.exists()
       ? alertasSnap.val().estado
@@ -68,7 +68,7 @@ exports.notificarTemperatura = onValueUpdated(
     // Entra en Alerta
     if (tempActual > alto && estadoAnterior !== "alta") {
       const mensaje = `⚠️ *ALERTA TEMP. ALTA*\n📍 *${nombreSala}*\n🌡️ *${tempActual.toFixed(
-        1
+        1,
       )}°C*`;
 
       await Promise.all([
@@ -81,7 +81,7 @@ exports.notificarTemperatura = onValueUpdated(
     // Normalización (Al bajar del umbral)
     else if (tempActual <= alto && estadoAnterior === "alta") {
       const mensaje = `✅ *TEMP. NORMALIZADA*\n📍 *${nombreSala}*\n🌡️ *${tempActual.toFixed(
-        1
+        1,
       )}°C*`;
 
       await Promise.all([
@@ -93,47 +93,58 @@ exports.notificarTemperatura = onValueUpdated(
     }
 
     return null;
-  }
+  },
 );
 
 // MONITOREO DE ENERGÍA (AC Y GENERADOR)
-exports.notificarEnergia = onValueUpdated("/monitoreo_energia/{tipoEnergia}", async (event) => {
-  const tipo = event.params.tipoEnergia; // Puede ser "Ac" o "Planta"
-  if (tipo !== "Ac" && tipo !== "Planta") return;
+exports.notificarEnergia = onValueUpdated(
+  "/monitoreo_energia/{tipoEnergia}",
+  async (event) => {
+    const tipo = event.params.tipoEnergia; // Puede ser "Ac" o "Planta"
+    if (tipo !== "Ac" && tipo !== "Planta") return;
 
-  const db = admin.database();
-  const estadoActual = event.data.after.val();
+    const db = admin.database();
+    const estadoActual = event.data.after.val();
+    const estadoPrevio = event.data.before.val();
 
-  const configSnap = await db.ref("/configuracion/telegram").get();
-  const { botToken, receptores } = configSnap.val() || {};
-  if (!botToken || !receptores) return;
+    if (estadoActual === estadoPrevio) return null; //no hubo cambios
 
-  const alertasRef = db.ref(`/alertas/${tipo}Estado`);
-  const alertasSnap = await alertasRef.get();
-  const estadoGuardado = alertasSnap.val();
+    const [configSnap, alertasSnap] = await Promise.all([
+      db.ref("/configuracion/telegram").get(),
+      db.ref(`/alertas/${tipo}Estado`).get(),
+    ]);
 
-  if (estadoActual === estadoGuardado) return;
+    const { botToken, receptores } = configSnap.val() || {};
+    const estadoGuardado = alertasSnap.val();
 
-  let mensaje = "";
-  if (tipo === "Ac") {
-    mensaje =
-      estadoActual === 0
-        ? `✅ *ENERGÍA ELÉCTRICA RESTABLECIDA*\n🔌 Status: *AC ONLINE*`
-        : `⚠️ *CORTE DE ENERGÍA ELÉCTRICA*\n🔌 Status: *AC OFFLINE*`;
-  } else {
-    mensaje =
-      estadoActual === 0
-        ? `✅ *PLANTA ELÉCTRICA APAGADA*\n⚙️ Status: *GENERADOR EN REPOSO*`
-        : `⚠️ *PLANTA ELÉCTRICA ENCENDIDA*\n⚙️ Status: *GENERADOR ACTIVO*`;
-  }
+    // Si no hay Telegram configurado y si el estado actual es igual al de alertas, salimos
+    if (!botToken || !receptores || estadoActual === estadoGuardado)
+      return null;
 
-try {
-  await enviarTelegram(botToken, receptores, mensaje);
-  await alertasRef.set(estadoActual);
-} catch (error) {
-  console.error("Error finalizando la función:", error);
-}
-});
+    let mensaje = "";
+    if (tipo === "Ac") {
+      mensaje =
+        estadoActual === 0
+          ? `✅ *ENERGÍA ELÉCTRICA RESTABLECIDA*\n🔌 Status: *AC ONLINE*`
+          : `⚠️ *CORTE DE ENERGÍA ELÉCTRICA*\n🔌 Status: *AC OFFLINE*`;
+    } else {
+      mensaje =
+        estadoActual === 0
+          ? `✅ *PLANTA ELÉCTRICA APAGADA*\n⚙️ Status: *GENERADOR EN REPOSO*`
+          : `⚠️ *PLANTA ELÉCTRICA ENCENDIDA*\n⚙️ Status: *GENERADOR ACTIVO*`;
+    }
+
+    try {
+      await Promise.all([
+        enviarTelegram(botToken, receptores, mensaje),
+        db.ref(`/alertas/${tipo}Estado`).set(estadoActual),
+      ]);
+    } catch (error) {
+      console.error("Error en proceso final:", error);
+    }
+    return null;
+  },
+);
 
 // VERIFICACIÓN DE CONEXIÓN (SCHEDULER)
 exports.verificarConexionSensores = onSchedule(
@@ -143,56 +154,60 @@ exports.verificarConexionSensores = onSchedule(
     const ahora = Date.now();
     const MARGEN_TIEMPO = 90000; // 90s
 
-    const [sensoresSnap, alertasSnap, configSnap] = await Promise.all([
+    const [heartbeatSnap, configSnap] = await Promise.all([
       db.ref("heartbeat").get(),
-      db.ref("alertas").get(),
       db.ref("configuracion/telegram").get(),
     ]);
 
     const config = configSnap.val() || {};
     const { botToken, receptores } = config;
+    if (!botToken || !receptores) return; // Si no hay Telegram configurado, salimos
 
-    // Si no hay Telegram configurado, salimos
-    if (!botToken || !receptores) return;
-
-    const sensores = sensoresSnap.val() || {};
-    const alertas = alertasSnap.val() || {};
-    let updatesAlertas = {};
+    const sensores = heartbeatSnap.val() || {};
+    let updates = {};
+    let promesasTelegram = []; // Para almacenar las promesas de envío de Telegram
 
     for (const salaId in sensores) {
       if (salaId.startsWith("Sala_")) {
         const ultimoUpdate = sensores[salaId].timestamp || 0;
         const estaOnlineAhora = ahora - ultimoUpdate < MARGEN_TIEMPO;
-        const estadoPrevioOnline = alertas[salaId]?.online !== false;
+        const estadoPrevioOnline = sensores[salaId]?.online !== false;
 
         if (!estaOnlineAhora && estadoPrevioOnline) {
-          // Envia "null" al nodo grafica
-          await db.ref(`grafica/${salaId}`).push({ ts: ahora, t: "null" });
-          await enviarTelegram(
-            botToken,
-            receptores,
-            `🔴 *DISPOSITIVO DESCONECTADO*\n📍 *${salaId.replace(
-              "_",
-              " "
-            )}*\n⚠️ El sensor no reporta hace más de 2 min.`
+          // Se desconectó
+          promesasTelegram.push(
+            enviarTelegram(
+              botToken,
+              receptores,
+              `🔴 *DISPOSITIVO DESCONECTADO*\n📍 *${salaId.replace(
+                "_",
+                " ",
+              )}*\n⚠️ El sensor no reporta hace más de 2 min.`,
+            ),
           );
-          updatesAlertas[`${salaId}/online`] = false;
+          updates[`${salaId}/online`] = false;
         } else if (estaOnlineAhora && !estadoPrevioOnline) {
-          await enviarTelegram(
-            botToken,
-            receptores,
-            `🟢 *DISPOSITIVO RECONECTADO*\n📍 *${salaId.replace(
-              "_",
-              " "
-            )}*\n✅ El sensor volvió a reportar datos.`
+          // Se reconectó
+          promesasTelegram.push(
+            enviarTelegram(
+              botToken,
+              receptores,
+              `🟢 *DISPOSITIVO RECONECTADO*\n📍 *${salaId.replace(
+                "_",
+                " ",
+              )}*\n✅ El sensor volvió a reportar datos.`,
+            ),
           );
-          updatesAlertas[`${salaId}/online`] = true;
+          updates[`${salaId}/online`] = true;
         }
       }
     }
 
-    if (Object.keys(updatesAlertas).length > 0) {
-      await db.ref("/alertas").update(updatesAlertas);
+    if (Object.keys(updates).length > 0 || promesasTelegram.length > 0) {
+      await Promise.all([
+        ...promesasTelegram,
+        db.ref("heartbeat").update(updates),
+      ]);
     }
-  }
+  },
 );
