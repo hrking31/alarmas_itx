@@ -148,11 +148,11 @@ exports.notificarEnergia = onValueUpdated(
 
 // VERIFICACIÓN DE CONEXIÓN (SCHEDULER)
 exports.verificarConexionSensores = onSchedule(
-  "every 1 minutes",
+  "every 5 minutes",
   async (event) => {
     const db = admin.database();
     const ahora = Date.now();
-    const MARGEN_TIEMPO = 90000; // 90s
+    const MARGEN_TIEMPO = 360000; // 90s
 
     const [heartbeatSnap, configSnap] = await Promise.all([
       db.ref("heartbeat").get(),

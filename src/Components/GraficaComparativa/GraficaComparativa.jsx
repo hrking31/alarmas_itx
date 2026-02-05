@@ -40,88 +40,176 @@ export default function GraficaComparativa() {
   }, []);
 
   // consulta solo el dia de cada sala
+  // useEffect(() => {
+  //   const hoy = new Date().toLocaleDateString("sv-SE");
+
+  //   const ahora = Date.now();
+
+  //   const inicioDia = new Date();
+  //   inicioDia.setHours(0, 0, 0, 0);
+  //   const tsInicioDia = inicioDia.getTime();
+
+  //   const tsInicioVentana = Math.max(tsInicioDia, ahora - horas * 3600 * 1000);
+
+  //   const mapa = {};
+  //   const unsubscribes = [];
+  //   // Objeto para último timestamp procesado por cada sala
+  //   const ultimosTsPorSala = {};
+
+  //   const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
+
+  //   salas.forEach((salaId) => {
+  //     const salaDiaRef = ref(database, `grafica/${salaId}/${hoy}`);
+
+  //     const unsubscribe = onValue(salaDiaRef, (snapshot) => {
+  //       const data = snapshot.val();
+  //       if (!data) {
+  //         setDatos([]); // Limpiar si no hay datos en ese día
+  //         return;
+  //       }
+
+  //       const registrosOrdenados = [];
+
+  //       // Recorremos las carpetas de las horas (00, 01, 02...)
+  //       Object.values(data).forEach((carpetaHora) => {
+  //         if (!carpetaHora) return;
+
+  //         Object.values(carpetaHora).forEach((registro) => {
+  //           if (registro?.ts && registro.t !== undefined) {
+  //             registrosOrdenados.push(registro);
+  //           }
+  //         });
+  //       });
+
+  //       // Se convierte a array y se ordena por ts
+  //       registrosOrdenados.sort((a, b) => a.ts - b.ts);
+
+  //       registrosOrdenados.forEach((registro) => {
+  //         if (!registro?.ts || registro.t === undefined) return;
+  //         if (registro.ts < tsInicioVentana) return;
+
+  //         const UMBRAL_MS = 2 * 60 * 1000; // 2 minutos
+
+  //         if (ultimosTsPorSala[salaId]) {
+  //           const diferencia = registro.ts - ultimosTsPorSala[salaId];
+
+  //           if (diferencia > UMBRAL_MS) {
+  //             // Se crea un punto null un minuto después del último dato conocido
+  //             const minutoNuloTs =
+  //               Math.floor((ultimosTsPorSala[salaId] + 60000) / 60000) * 60000;
+
+  //             if (!mapa[minutoNuloTs]) {
+  //               const fechaNula = new Date(minutoNuloTs);
+  //               mapa[minutoNuloTs] = {
+  //                 ts: minutoNuloTs,
+  //                 hora: fechaNula.toLocaleTimeString("es-CO", {
+  //                   hour: "2-digit",
+  //                   minute: "2-digit",
+  //                   hour12: true,
+  //                 }),
+  //               };
+  //             }
+  //             mapa[minutoNuloTs][salaId] = null; //Se agrega el corte
+  //           }
+  //         }
+  //         ultimosTsPorSala[salaId] = registro.ts;
+
+  //         const minutoTs = Math.floor(registro.ts / 60000) * 60000;
+  //         const fecha = new Date(minutoTs);
+
+  //         if (!mapa[minutoTs]) {
+  //           mapa[minutoTs] = {
+  //             ts: minutoTs,
+  //             hora: fecha.toLocaleTimeString("es-CO", {
+  //               hour: "2-digit",
+  //               minute: "2-digit",
+  //               hour12: true,
+  //             }),
+  //           };
+  //         }
+
+  //         mapa[minutoTs][salaId] = registro.t;
+  //       });
+
+  //       const lista = Object.values(mapa).sort((a, b) => a.ts - b.ts);
+  //       setDatosGrafica(lista);
+  //     });
+
+  //     unsubscribes.push(unsubscribe);
+  //   });
+
+  //   return () => unsubscribes.forEach((u) => u());
+  // }, [horas]);
+
   useEffect(() => {
     const hoy = new Date().toLocaleDateString("sv-SE");
-
     const ahora = Date.now();
+    const tsInicioVentana = ahora - horas * 3600 * 1000;
 
-    const inicioDia = new Date();
-    inicioDia.setHours(0, 0, 0, 0);
-    const tsInicioDia = inicioDia.getTime();
+    // Usaremos un objeto para almacenar los datos crudos de cada sala
+    const datosPorSala = { Sala_1: [], Sala_2: [], Sala_3: [], Sala_4: [] };
+    const salas = Object.keys(datosPorSala);
 
-    const tsInicioVentana = Math.max(tsInicioDia, ahora - horas * 3600 * 1000);
-
-    const mapa = {};
-    const unsubscribes = [];
-    // Objeto para último timestamp procesado por cada sala
-    const ultimosTsPorSala = {};
-
-    const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
-
-    salas.forEach((salaId) => {
+    const unsubscribes = salas.map((salaId) => {
       const salaDiaRef = ref(database, `grafica/${salaId}/${hoy}`);
 
-      const unsubscribe = onValue(salaDiaRef, (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
+      return onValue(salaDiaRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        const registrosProcesados = [];
+        let ultimoTs = 0;
+        const UMBRAL_MS = 2 * 60 * 1000;
 
-        // se ordenan los registros de la sala para comparar tiempos correctamente
-        const registrosOrdenados = Object.values(data).sort(
-          (a, b) => a.ts - b.ts,
-        );
-
-        registrosOrdenados.forEach((registro) => {
-          if (!registro?.ts || registro.t === undefined) return;
-          if (registro.ts < tsInicioVentana) return;
-
-          const UMBRAL_MS = 2 * 60 * 1000; // 2 minutos
-
-          if (ultimosTsPorSala[salaId]) {
-            const diferencia = registro.ts - ultimosTsPorSala[salaId];
-
-            if (diferencia > UMBRAL_MS) {
-              // Se crea un punto null un minuto después del último dato conocido
-              const minutoNuloTs =
-                Math.floor((ultimosTsPorSala[salaId] + 60000) / 60000) * 60000;
-
-              if (!mapa[minutoNuloTs]) {
-                const fechaNula = new Date(minutoNuloTs);
-                mapa[minutoNuloTs] = {
-                  ts: minutoNuloTs,
-                  hora: fechaNula.toLocaleTimeString("es-CO", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  }),
-                };
+        // 1. Extraer y aplanar registros de las carpetas de horas
+        const registrosCrudos = [];
+        Object.values(data).forEach((horaNode) => {
+          if (horaNode) {
+            Object.values(horaNode).forEach((reg) => {
+              if (reg.ts && reg.ts >= tsInicioVentana) {
+                registrosCrudos.push(reg);
               }
-              mapa[minutoNuloTs][salaId] = null; //Se agrega el corte
-            }
+            });
           }
-          ultimosTsPorSala[salaId] = registro.ts;
-
-          const minutoTs = Math.floor(registro.ts / 60000) * 60000;
-          const fecha = new Date(minutoTs);
-
-          if (!mapa[minutoTs]) {
-            mapa[minutoTs] = {
-              ts: minutoTs,
-              hora: fecha.toLocaleTimeString("es-CO", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              }),
-            };
-          }
-
-          mapa[minutoTs][salaId] = registro.t;
         });
 
-        const lista = Object.values(mapa).sort((a, b) => a.ts - b.ts);
-        setDatosGrafica(lista);
-      });
+        // 2. Ordenar registros de esta sala
+        registrosCrudos.sort((a, b) => a.ts - b.ts);
 
-      unsubscribes.push(unsubscribe);
+        // 3. Procesar con detección de huecos (null)
+        registrosCrudos.forEach((reg) => {
+          if (ultimoTs > 0 && reg.ts - ultimoTs > UMBRAL_MS) {
+            // Insertar punto de ruptura
+            registrosProcesados.push({ ts: ultimoTs + 60000, t: null });
+          }
+          registrosProcesados.push({ ts: reg.ts, t: reg.t });
+          ultimoTs = reg.ts;
+        });
+
+        // Guardar en nuestro almacén temporal
+        datosPorSala[salaId] = registrosProcesados;
+
+        // 4. UNIFICAR TODAS LAS SALAS EN EL MAPA DE LA GRÁFICA
+        const nuevoMapa = {};
+
+        salas.forEach((id) => {
+          datosPorSala[id].forEach((punto) => {
+            // Agrupar por minuto para que Recharts alinee los puntos
+            const minutoTs = Math.floor(punto.ts / 60000) * 60000;
+            if (!nuevoMapa[minutoTs]) {
+              nuevoMapa[minutoTs] = {
+                ts: minutoTs,
+                hora: new Date(minutoTs).toLocaleTimeString("es-CO", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                }),
+              };
+            }
+            nuevoMapa[minutoTs][id] = punto.t;
+          });
+        });
+
+        setDatosGrafica(Object.values(nuevoMapa).sort((a, b) => a.ts - b.ts));
+      });
     });
 
     return () => unsubscribes.forEach((u) => u());

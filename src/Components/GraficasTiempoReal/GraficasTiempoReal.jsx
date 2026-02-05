@@ -28,19 +28,30 @@ export default function GraficaTiempoReal({
       `grafica/${salaId}/${fechaSeleccionada}`,
     );
 
-    const consulta = query(historialRef, orderByChild("ts"));
-
     setDatos([]);
 
-    const unsubscribe = onValue(consulta, (snapshot) => {
+    const unsubscribe = onValue(historialRef, (snapshot) => {
       const data = snapshot.val();
       if (!data) {
         setDatos([]); // Limpiar si no hay datos en ese día
         return;
       }
 
+      const registrosExtraidos = [];
+
+      // Recorremos las carpetas de las horas (00, 01, 02...)
+      Object.keys(data).forEach((hora) => {
+        const registrosDeEsaHora = data[hora];
+        if (registrosDeEsaHora) {
+          // En esta estructura, dentro de la hora ya están los registros directos
+          Object.values(registrosDeEsaHora).forEach((reg) => {
+            registrosExtraidos.push(reg);
+          });
+        }
+      });
+
       // Se convierte a array y se ordena por ts
-      const registros = Object.values(data).sort((a, b) => a.ts - b.ts);
+      const registros = registrosExtraidos.sort((a, b) => a.ts - b.ts);
       const listaProcesada = [];
       const UMBRAL_MS = 2 * 60 * 1000; // 2 minutos
 
