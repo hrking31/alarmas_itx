@@ -5,6 +5,7 @@ import { FaChevronLeft, FaChevronRight, FaCalendarAlt } from "react-icons/fa";
 export default function DateOnlyPicker({
   fechaSeleccionada,
   setFechaSeleccionada,
+  soloIcono = false,
 }) {
   const inputRef = useRef(null);
   const { darkMode } = useDarkMode();
@@ -15,6 +16,21 @@ export default function DateOnlyPicker({
     fecha.setDate(fecha.getDate() + offset);
 
     setFechaSeleccionada(fecha.toLocaleDateString("sv-SE"));
+  };
+
+  const formatFechaCorta = (fechaSeleccionada) => {
+    if (!fechaSeleccionada) return "";
+
+    const [y, m, d] = fechaSeleccionada.split("-").map(Number);
+    const fecha = new Date(y, m - 1, d);
+
+    const dia = fecha.getDate();
+    const mes = fecha
+      .toLocaleDateString("es-CO", { month: "short" })
+      .replace(".", "") // quita punto si el navegador lo agrega
+      .toLowerCase();
+
+    return `${dia}/${mes}`;
   };
 
   return (
@@ -29,14 +45,16 @@ export default function DateOnlyPicker({
       {/* Texto visible */}
       <button
         onClick={() => inputRef.current?.showPicker?.()}
-        className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 dark:text-cyan-400
-          cursor-pointer select-none"
+        className="flex items-center justify-center gap-2 text-[10px] font-bold
+             text-slate-400 dark:text-cyan-400 cursor-pointer select-none"
       >
-        {fechaSeleccionada}{" "}
-        <FaCalendarAlt
-          size={10}
-          className=" text-slate-400 dark:text-cyan-400"
-        />
+        {soloIcono ? formatFechaCorta(fechaSeleccionada) : fechaSeleccionada}
+        {!soloIcono && (
+          <FaCalendarAlt
+            size={10}
+            className="text-slate-400 dark:text-cyan-400"
+          />
+        )}
       </button>
 
       {/* Input oculto */}

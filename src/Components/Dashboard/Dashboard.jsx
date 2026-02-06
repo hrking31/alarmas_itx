@@ -355,6 +355,7 @@ export default function App() {
                   <DateOnlyPicker
                     fechaSeleccionada={fechaSeleccionada}
                     setFechaSeleccionada={setFechaSeleccionada}
+                    soloIcono={isPortrait}
                   />
                 </div>
 

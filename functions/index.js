@@ -4,6 +4,16 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
+// FUNCIONES AUXILIARES
+function getFechaLocal(diasAjuste = 0) {
+  const fecha = new Date();
+  // Ajuste para la zona horaria de Colombia/Bogotá (UTC-5)
+  fecha.setHours(fecha.getHours() - 5);
+  fecha.setDate(fecha.getDate() + diasAjuste);
+
+  return fecha.toISOString().split("T")[0]; // Retorna "2026-02-06"
+}
+
 // FUNCIÓN DE TELEGRAM
 const enviarTelegram = async (botToken, receptores, texto) => {
   const fechaHoraTexto = new Date().toLocaleString("es-CO", {
@@ -208,6 +218,46 @@ exports.verificarConexionSensores = onSchedule(
         ...promesasTelegram,
         db.ref("heartbeat").update(updates),
       ]);
+    }
+  },
+);
+
+// LIMPIEZA DE GRÁFICA HISTÓRICA
+exports.limpiarGraficaHistorica = onSchedule(
+  {
+    schedule: "0 3 * * *", // 3:00 AM todos los días
+    region: "us-central1",
+  },
+  async () => {
+    const db = admin.database();
+    const fechaABorrar = getFechaLocal(-30); // Calcula exactamente hace 30 días
+    const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
+    let salasLimpiadas = 0;
+
+    try {
+      for (const sala of salas) {
+        const refDiaViejo = db.ref(`grafica/${sala}/${fechaABorrar}`);
+        const snap = await refDiaViejo.get();
+
+        if (snap.exists()) {
+          await refDiaViejo.remove();
+          salasLimpiadas++;
+        }
+      }
+
+      if (salasLimpiadas > 0) {
+        const snapConfig = await db.ref("configuracion/telegram").get();
+        const config = snapConfig.val();
+
+        if (config?.botToken && config?.chatId) {
+          await enviarTelegram(
+            config.botToken,
+            config.chatId,
+            `🧹 *Limpieza de Historial*\nSe eliminó el día: *${fechaABorrar}*\nSalas procesadas: *${salasLimpiadas}*`,
+          );
+        }
+      }
+    } catch (error) {
     }
   },
 );
