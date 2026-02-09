@@ -4,10 +4,9 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// FUNCIONES AUXILIARES
+// FUNCION FECHA LOCAL
 function getFechaLocal(diasAjuste = 0) {
   const fecha = new Date();
-  // Ajuste para la zona horaria de Colombia/Bogotá (UTC-5)
   fecha.setHours(fecha.getHours() - 5);
   fecha.setDate(fecha.getDate() + diasAjuste);
 
@@ -162,7 +161,7 @@ exports.verificarConexionSensores = onSchedule(
   async (event) => {
     const db = admin.database();
     const ahora = Date.now();
-    const MARGEN_TIEMPO = 360000; // 90s
+    const MARGEN_TIEMPO = 60 * 1000; // 60s
 
     const [heartbeatSnap, configSnap] = await Promise.all([
       db.ref("heartbeat").get(),
@@ -192,7 +191,7 @@ exports.verificarConexionSensores = onSchedule(
               `🔴 *DISPOSITIVO DESCONECTADO*\n📍 *${salaId.replace(
                 "_",
                 " ",
-              )}*\n⚠️ El sensor no reporta hace más de 2 min.`,
+              )}*\n⚠️ El sensor no ha reportado datos durante aproximadamente 5 minutos.`,
             ),
           );
           updates[`${salaId}/online`] = false;
@@ -226,6 +225,7 @@ exports.verificarConexionSensores = onSchedule(
 exports.limpiarGraficaHistorica = onSchedule(
   {
     schedule: "0 3 * * *", // 3:00 AM todos los días
+    timeZone: "America/Bogota",
     region: "us-central1",
   },
   async () => {
@@ -246,18 +246,20 @@ exports.limpiarGraficaHistorica = onSchedule(
       }
 
       if (salasLimpiadas > 0) {
-        const snapConfig = await db.ref("configuracion/telegram").get();
-        const config = snapConfig.val();
+        const configSnap = await db.ref("configuracion/telegram").get();
+        const configTelegram = configSnap.val() || {};
+        const { botToken, receptores } = configTelegram;
 
-        if (config?.botToken && config?.chatId) {
+        if (botToken && receptores) {
           await enviarTelegram(
-            config.botToken,
-            config.chatId,
+            botToken,
+            receptores,
             `🧹 *Limpieza de Historial*\nSe eliminó el día: *${fechaABorrar}*\nSalas procesadas: *${salasLimpiadas}*`,
           );
         }
       }
     } catch (error) {
+      console.error("Error en la función de limpieza:", error);
     }
   },
 );
