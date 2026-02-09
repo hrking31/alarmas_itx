@@ -161,7 +161,7 @@ exports.verificarConexionSensores = onSchedule(
   async (event) => {
     const db = admin.database();
     const ahora = Date.now();
-    const MARGEN_TIEMPO = 60 * 1000; // 60s
+    const MARGEN_TIEMPO = 90 * 1000; // 90s
 
     const [heartbeatSnap, configSnap] = await Promise.all([
       db.ref("heartbeat").get(),
