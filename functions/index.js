@@ -161,7 +161,7 @@ exports.verificarConexionSensores = onSchedule(
   async (event) => {
     const db = admin.database();
     const ahora = Date.now();
-    const MARGEN_TIEMPO = 90 * 1000; // 90s
+    const MARGEN_TIEMPO = 120 * 1000; // 2 minutos para mayor tolerancia
 
     const [heartbeatSnap, configSnap] = await Promise.all([
       db.ref("heartbeat").get(),
@@ -230,17 +230,29 @@ exports.limpiarGraficaHistorica = onSchedule(
   },
   async () => {
     const db = admin.database();
-    const fechaABorrar = getFechaLocal(-30); // Calcula exactamente hace 30 días
+    const store = admin.firestore();
+    const fechaAyer = getFechaLocal(-1); //Día anterior en RTDB
+    const fechaABorrar = getFechaLocal(-61); // Calcula exactamente hace 60 días
     const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
     let salasLimpiadas = 0;
 
     try {
       for (const sala of salas) {
-        const refDiaViejo = db.ref(`grafica/${sala}/${fechaABorrar}`);
-        const snap = await refDiaViejo.get();
+        // Si existe la copia en Firestore?
+        const docSnap = await store
+          .collection("historicos")
+          .doc(`${sala}_${fechaAyer}`)
+          .get();
 
-        if (snap.exists()) {
-          await refDiaViejo.remove();
+        // Existe en Firestore, es seguro borrar de RTDB
+        if (docSnap.exists) {
+          await db.ref(`grafica/${sala}/${fechaAyer}`).remove();
+
+          // Limpieza de Firestore (61 días)
+          await store
+            .collection("historicos")
+            .doc(`${sala}_${fechaABorrar}`)
+            .delete();
           salasLimpiadas++;
         }
       }
@@ -261,5 +273,66 @@ exports.limpiarGraficaHistorica = onSchedule(
     } catch (error) {
       console.error("Error en la función de limpieza:", error);
     }
+    return null;
+  },
+);
+
+// HISTÓRICO DIARIO EN FIRESTORE
+exports.respaldarHistorialDiario = onSchedule(
+  {
+    schedule: "1 0 * * *", // Se ejecuta a las 00:05 AM todos los días
+    timeZone: "America/Bogota",
+    region: "us-central1",
+  },
+  async () => {
+    const db = admin.database();
+    const store = admin.firestore();
+    const fechaAyer = getFechaLocal(-1); // Obtener la fecha del dia que termino (ayer)
+    const salas = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
+
+    for (const salaId of salas) {
+      try {
+        // Se lee el nodo del día anterior en RTDB
+        const snapshot = await db
+          .ref(`grafica/${salaId}/${fechaAyer}`)
+          .once("value");
+        const dataDia = snapshot.val();
+
+        if (dataDia) {
+          const arrayAplanado = [];
+
+          // Entrar en cada hora y saca los registros
+          Object.values(dataDia).forEach((horaNode) => {
+            if (horaNode) {
+              Object.values(horaNode).forEach((registro) => {
+                arrayAplanado.push({
+                  t: registro.t,
+                  ts: registro.ts,
+                });
+              });
+            }
+          });
+
+          // Ordenar por timestamp
+          arrayAplanado.sort((a, b) => a.ts - b.ts);
+
+          // Guarda en Firestore como un solo documento
+          await store
+            .collection("historicos")
+            .doc(`${salaId}_${fechaAyer}`)
+            .set({
+              sensorId: salaId,
+              fecha: fechaAyer,
+              lecturas: arrayAplanado, // array listo
+              creadoEn: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+          console.log(`Respaldo exitoso: ${salaId} - ${fechaAyer}`);
+        }
+      } catch (error) {
+        console.error(`Error procesando ${salaId}:`, error);
+      }
+    }
+    return null;
   },
 );
