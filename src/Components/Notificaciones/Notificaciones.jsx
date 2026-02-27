@@ -22,13 +22,14 @@ export default function Notificaciones() {
 
   const variants = {
     success:
-      "border-emerald-500/50 text-emerald-600 dark:text-emerald-400 shadow-emerald-500/10",
-    error: "border-red-500/50 text-red-600 dark:text-red-400 shadow-red-500/10",
+      "border-green-400 text-green-500 dark:text-green-400 shadow-[0_0_10px_rgba(74,222,128,0.2)]",
+    error:
+      "border-red-500 text-red-600 dark:text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]",
     warning:
-      "border-orange-500/50 text-orange-600 dark:text-orange-400 shadow-orange-500/10",
-    info: "border-blue-500/50 text-blue-600 dark:text-blue-400 shadow-blue-500/10",
+      "border-yellow-400 text-yellow-500 dark:text-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.2)]",
+    info: "border-cyan-400 text-cyan-500 dark:text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]",
     confirm:
-      "border-emerald-500 text-slate-900 dark:text-white shadow-emerald-500/20",
+      "border-fuchsia-500 text-fuchsia-600 dark:text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.3)]",
   };
 
   const icons = {

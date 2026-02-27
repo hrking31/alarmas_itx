@@ -15,10 +15,13 @@ import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.js
 import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
 import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
 import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
+import { useAppContext } from "../../Context/AppContext";
+import Loading from "../Loading/Loading.jsx";
 
 export default function App() {
   const navigate = useNavigate();
   const { darkMode, setDarkMode } = useDarkMode();
+  const { showNotif } = useAppContext();
   const [sensores, setSensores] = useState(null);
   const [umbral, setUmbral] = useState(null);
   const [horas, setHoras] = useState(null);
@@ -27,7 +30,6 @@ export default function App() {
   const [planta, setPlanta] = useState(0);
   const [selectedSala, setSelectedSala] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(() =>
     new Date().toLocaleDateString("sv-SE"),
   );
@@ -36,6 +38,7 @@ export default function App() {
     window.matchMedia("(orientation: portrait)").matches,
   );
 
+  // Detecta cambios de orientación para diseño del modal
   useEffect(() => {
     const onChange = () =>
       setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
@@ -49,7 +52,9 @@ export default function App() {
     };
   }, []);
 
+  // Escucha en tiempo real los cambios en RTBD para actualizar el dashboard
   useEffect(() => {
+    setLoading(true);
     try {
       const sensoresRef = ref(database, "sensores");
       const umbralRef = ref(database, "configuracion/umbral");
@@ -60,6 +65,7 @@ export default function App() {
 
       const unsubSensores = onValue(sensoresRef, (snap) => {
         if (snap.exists()) setSensores(snap.val());
+        setLoading(false);
       });
 
       const unsubUmbral = onValue(umbralRef, (snap) => {
@@ -93,7 +99,10 @@ export default function App() {
         unsubPlanta();
       };
     } catch (err) {
-      setError(err);
+      showNotif(
+        "error",
+        "FALLO DE ENLACE: Error al conectar con el servidor de datos",
+      );
       setLoading(false);
     }
   }, []);
@@ -101,6 +110,14 @@ export default function App() {
   const plantaEncendida = planta === 1;
   const redCorte = ac === 1;
   const AcPlanta = heartbeat?.AcPlanta?.timestamp;
+
+  if (loading) {
+    return (
+      <div className="h-svh w-full flex items-center justify-center bg-slate-950">
+        <Loading text="ESTABLECIENDO PROTOCOLOS DE SEGURIDAD..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-svh flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
@@ -359,7 +376,7 @@ export default function App() {
                   />
                 </div>
 
-                {/* Boton de salida */}
+                {/* Botón de salida */}
                 <button
                   onClick={() => setSelectedSala(null)}
                   className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"

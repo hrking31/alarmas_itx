@@ -247,12 +247,16 @@ exports.limpiarGraficaHistorica = onSchedule(
         // Existe en Firestore, es seguro borrar de RTDB
         if (docSnap.exists) {
           await db.ref(`grafica/${sala}/${fechaAyer}`).remove();
+        }
 
-          // Limpieza de Firestore (61 días)
-          await store
-            .collection("historicos")
-            .doc(`${sala}_${fechaABorrar}`)
-            .delete();
+        // Limpieza de Firestore (61 días)
+        const docRefViejo = store
+          .collection("historicos")
+          .doc(`${sala}_${fechaABorrar}`);
+        const docSnapViejo = await docRefViejo.get();
+
+        if (docSnapViejo.exists) {
+          await docRefViejo.delete();
           salasLimpiadas++;
         }
       }
