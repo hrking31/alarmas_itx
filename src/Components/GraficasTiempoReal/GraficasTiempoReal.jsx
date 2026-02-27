@@ -65,8 +65,16 @@ export default function GraficaTiempoReal({
     setLoading(true);
     setDatos([]);
 
+    // Se ajusta a la zona horaria de Colombia
+    const obtenerFechaLocal = () => {
+      const ahora = new Date();
+      const offset = ahora.getTimezoneOffset() * 60000;
+      const localISOTime = new Date(ahora - offset).toISOString().split("T")[0];
+      return localISOTime;
+    };
+
     // La fecha seleccionada es HOY
-    const hoy = new Date().toISOString().split("T")[0];
+    const hoy = obtenerFechaLocal();
     const esHoy = fechaSeleccionada === hoy;
 
     if (esHoy) {
@@ -148,7 +156,7 @@ export default function GraficaTiempoReal({
           </p>
         </div>
       ) : null}
-      
+
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={datos} accessibilityLayer={false}>
           <defs>
