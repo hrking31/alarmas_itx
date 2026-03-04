@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
 import { database } from "../../Firebase/Firebase.js";
 import Footer from "../../Components/Footer/Footer.jsx";
 import logo from "../../assets/Logo.png";
@@ -15,8 +15,11 @@ import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.js
 import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
 import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
 import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
+import ContadorPlanta from "../ContadorPlanta/ContadorPlanta.jsx";
 import { useAppContext } from "../../Context/AppContext";
 import Loading from "../Loading/Loading.jsx";
+import SimuladorPlanta from "../SimuladorPlanta/SimuladorPlanta.jsx";
+import ModalUpdateHorometro from "../ModalUpdateHorometro/ModalUpdateHorometro.jsx";
 
 export default function App() {
   const navigate = useNavigate();
@@ -28,15 +31,48 @@ export default function App() {
   const [heartbeat, setHeartbeat] = useState(null);
   const [ac, setAc] = useState(0);
   const [planta, setPlanta] = useState(0);
+  const [engineStartTimestamp, setEngineStartTimestamp] = useState(0);
+  const [totalMsAcumulados, setTotalMsAcumulados] = useState(0);
   const [selectedSala, setSelectedSala] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(() =>
     new Date().toLocaleDateString("sv-SE"),
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [isPortrait, setIsPortrait] = useState(
     window.matchMedia("(orientation: portrait)").matches,
   );
+
+  // Datos de RTBD
+  const [datosHorometro, setDatosHorometro] = useState({
+    totalMs: 45000000, // Ejemplo: 12.5 horas
+    estado: 0,
+  });
+
+  const handleUpdateMs = async (nuevoTotalMs) => {
+    try {
+      const dbRef = ref(database, "energia");
+
+      await update(dbRef, {
+        totalMsAcumulados: nuevoTotalMs,
+        // Se inicia al momento actual para que el contador
+        // empiece a sumar desde el nuevo valor calibrado
+        engineStartTimestamp: Date.now(),
+      });
+
+      // 3. Se actualiza el estado local
+      setDatosHorometro((prev) => ({
+        ...prev,
+        totalMsAcumulados: nuevoTotalMs,
+        engineStartTimestamp: Date.now(),
+      }));
+
+      console.log("✅ Base de datos actualizada correctamente");
+    } catch (error) {
+      console.error("❌ Error al actualizar Firebase:", error);
+    }
+  };
 
   // Detecta cambios de orientación para diseño del modal
   useEffect(() => {
@@ -60,8 +96,7 @@ export default function App() {
       const umbralRef = ref(database, "configuracion/umbral");
       const horasRef = ref(database, "configuracion/horas");
       const heartbeatRef = ref(database, "heartbeat");
-      const acRef = ref(database, "monitoreo_energia/Ac");
-      const plantaRef = ref(database, "monitoreo_energia/Planta");
+      const energiaRef = ref(database, "energia");
 
       const unsubSensores = onValue(sensoresRef, (snap) => {
         if (snap.exists()) setSensores(snap.val());
@@ -80,12 +115,14 @@ export default function App() {
         if (snap.exists()) setHeartbeat(snap.val());
       });
 
-      const unsubAc = onValue(acRef, (snap) => {
-        setAc(snap.val());
-      });
-
-      const unsubPlanta = onValue(plantaRef, (snap) => {
-        setPlanta(snap.val());
+      const unsubEnergia = onValue(energiaRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.val();
+          setPlanta(data.Planta);
+          setAc(data.Ac);
+          setEngineStartTimestamp(data.engineStartTimestamp);
+          setTotalMsAcumulados(data.totalMsAcumulados);
+        }
       });
 
       setLoading(false);
@@ -95,8 +132,7 @@ export default function App() {
         unsubUmbral();
         unsubHoras();
         unsubHeartbeat();
-        unsubAc();
-        unsubPlanta();
+        unsubEnergia();
       };
     } catch (err) {
       showNotif(
@@ -107,9 +143,11 @@ export default function App() {
     }
   }, []);
 
-  const plantaEncendida = planta === 1;
-  const redCorte = ac === 1;
   const AcPlanta = heartbeat?.AcPlanta?.timestamp;
+  const redCorte = ac === 1;
+  const plantaEncendida = planta === 1;
+  const engineStart = engineStartTimestamp || 0;
+  const acumulados = totalMsAcumulados || 0;
 
   if (loading) {
     return (
@@ -143,6 +181,15 @@ export default function App() {
             </p>
           </div>
         </button>
+
+        <div className="hidden md:block">
+          <SimuladorPlanta />
+          <ContadorPlanta
+            estado={plantaEncendida}
+            engineStartTimestamp={engineStart}
+            totalMsAcumulados={acumulados}
+          />
+        </div>
 
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -227,6 +274,34 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          <div className="flex md:hidden justify-center w-full">
+            <div
+              onClick={() => setIsModalOpen(true)}
+              className="w-fit h-fit cursor-pointer hover:scale-105 transition-transform"
+            >
+              <ContadorPlanta
+                estado={plantaEncendida}
+                engineStartTimestamp={engineStart}
+                totalMsAcumulados={acumulados}
+              />
+            </div>
+          </div>
+
+          <ModalUpdateHorometro
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleUpdateMs}
+            // Pasamos el valor actual convertido a string de 6 dígitos
+            valorActual={
+              Math.floor(datosHorometro.totalMs / 3600000)
+                .toString()
+                .padStart(5, "0") +
+              Math.floor(
+                ((datosHorometro.totalMs / 3600000) % 1) * 10,
+              ).toString()
+            }
+          />
 
           {/* Estadísticas solo para TV (XL) */}
           <section className="hidden tv:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
