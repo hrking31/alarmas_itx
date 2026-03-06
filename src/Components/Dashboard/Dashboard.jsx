@@ -56,21 +56,20 @@ export default function App() {
 
       await update(dbRef, {
         totalMsAcumulados: nuevoTotalMs,
-        // Se inicia al momento actual para que el contador
-        // empiece a sumar desde el nuevo valor calibrado
+        // Se inicia al momento actual para que el contador empiece a sumar desde el nuevo valor calibrado
         engineStartTimestamp: Date.now(),
       });
 
-      // 3. Se actualiza el estado local
+      // Se actualiza el estado local
       setDatosHorometro((prev) => ({
         ...prev,
         totalMsAcumulados: nuevoTotalMs,
         engineStartTimestamp: Date.now(),
       }));
 
-      console.log("✅ Base de datos actualizada correctamente");
+      showNotif("success", "Sincronización exitosa: Horómetro actualizado");
     } catch (error) {
-      console.error("❌ Error al actualizar Firebase:", error);
+      showNotif("error", "Error de red: La calibración no pudo ser enviada");
     }
   };
 
@@ -91,31 +90,59 @@ export default function App() {
   // Escucha en tiempo real los cambios en RTBD para actualizar el dashboard
   useEffect(() => {
     setLoading(true);
-    try {
-      const sensoresRef = ref(database, "sensores");
-      const umbralRef = ref(database, "configuracion/umbral");
-      const horasRef = ref(database, "configuracion/horas");
-      const heartbeatRef = ref(database, "heartbeat");
-      const energiaRef = ref(database, "energia");
 
-      const unsubSensores = onValue(sensoresRef, (snap) => {
+    // Función para manejar errores de Firebase
+    const handleError = (error) => {
+      console.error(error);
+      showNotif(
+        "error",
+        "ERROR DE SINCRONIZACIÓN: Pérdida de enlace con el servidor",
+      );
+      setLoading(false);
+    };
+
+    const sensoresRef = ref(database, "sensores");
+    const umbralRef = ref(database, "configuracion/umbral");
+    const horasRef = ref(database, "configuracion/horas");
+    const heartbeatRef = ref(database, "heartbeat");
+    const energiaRef = ref(database, "energia");
+
+    const unsubSensores = onValue(
+      sensoresRef,
+      (snap) => {
         if (snap.exists()) setSensores(snap.val());
         setLoading(false);
-      });
+      },
+      handleError,
+    );
 
-      const unsubUmbral = onValue(umbralRef, (snap) => {
+    const unsubUmbral = onValue(
+      umbralRef,
+      (snap) => {
         if (snap.exists()) setUmbral(snap.val());
-      });
+      },
+      handleError,
+    );
 
-      const unsubHoras = onValue(horasRef, (snap) => {
+    const unsubHoras = onValue(
+      horasRef,
+      (snap) => {
         if (snap.exists()) setHoras(snap.val());
-      });
+      },
+      handleError,
+    );
 
-      const unsubHeartbeat = onValue(heartbeatRef, (snap) => {
+    const unsubHeartbeat = onValue(
+      heartbeatRef,
+      (snap) => {
         if (snap.exists()) setHeartbeat(snap.val());
-      });
+      },
+      handleError,
+    );
 
-      const unsubEnergia = onValue(energiaRef, (snap) => {
+    const unsubEnergia = onValue(
+      energiaRef,
+      (snap) => {
         if (snap.exists()) {
           const data = snap.val();
           setPlanta(data.Planta);
@@ -123,24 +150,26 @@ export default function App() {
           setEngineStartTimestamp(data.engineStartTimestamp);
           setTotalMsAcumulados(data.totalMsAcumulados);
         }
-      });
+      },
+      handleError,
+    );
 
-      setLoading(false);
+    // setLoading(false);
 
-      return () => {
-        unsubSensores();
-        unsubUmbral();
-        unsubHoras();
-        unsubHeartbeat();
-        unsubEnergia();
-      };
-    } catch (err) {
-      showNotif(
-        "error",
-        "FALLO DE ENLACE: Error al conectar con el servidor de datos",
-      );
-      setLoading(false);
-    }
+    return () => {
+      unsubSensores();
+      unsubUmbral();
+      unsubHoras();
+      unsubHeartbeat();
+      unsubEnergia();
+    };
+    // } catch (err) {
+    //   showNotif(
+    //     "error",
+    //     "FALLO DE ENLACE: Error al conectar con el servidor de datos",
+    //   );
+    //   setLoading(false);
+    // }
   }, []);
 
   const AcPlanta = heartbeat?.AcPlanta?.timestamp;
@@ -183,7 +212,7 @@ export default function App() {
         </button>
 
         <div className="hidden md:block">
-          <SimuladorPlanta />
+          {/* <SimuladorPlanta /> */}
           <ContadorPlanta
             estado={plantaEncendida}
             engineStartTimestamp={engineStart}

@@ -73,13 +73,14 @@ const DigitoCasilla = ({
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((num, index) => (
           <div
             key={index}
-            className={`h-7 flex items-center justify-center font-mono font-bold text-lg ${
+            className={`h-7 flex items-center justify-center font-bold text-lg scale-y-130 scale-x-90 ${
               darkMode
                 ? esRojo
                   ? "text-red-200 drop-shadow-[0_0_4px_red]"
                   : "text-green-300 drop-shadow-[0_0_6px_lime]"
                 : "text-gray-100"
             }`}
+            style={{ fontFamily: "'Roboto Mono', monospace" }}
           >
             {num}
           </div>
@@ -117,7 +118,6 @@ const ContadorPlanta = ({
 
       // todo a décimas totales
       const totalDecimas = Math.floor(tiempoActualMs / 360000);
-      console.log("totalDecimas", totalDecimas);
 
       // Separa parte entera y decimal
       const horasEnteras = Math.floor(totalDecimas / 10)
@@ -160,7 +160,7 @@ const ContadorPlanta = ({
       />
 
       <div
-        className={`flex gap-1 p- rounded border-2 transition-all duration-500 ${
+        className={`flex gap-1 rounded border-2 transition-all duration-500 ${
           darkMode
             ? "bg-black border-[#050505] shadow-[inset_0_0_15px_black]"
             : "bg-black border-[#111]"
