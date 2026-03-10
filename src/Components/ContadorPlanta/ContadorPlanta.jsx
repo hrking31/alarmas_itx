@@ -143,7 +143,7 @@ const ContadorPlanta = ({
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-500 ${
+      className={`inline-flex items-center gap-2 px-1 py-1 rounded-lg border transition-all duration-500 ${
         darkMode
           ? "bg-linear-to-br from-[#4a4a4a] via-[#1a1a1a] to-[#0a0a0a] border-[#555] shadow-[0_4px_10px_rgba(0,0,0,0.9)]"
           : "bg-linear-to-br from-[#e0e0e0] via-[#999999] to-[#777777] border-[#888] shadow-inner"

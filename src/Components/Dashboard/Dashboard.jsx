@@ -211,14 +211,14 @@ export default function App() {
           </div>
         </button>
 
-        <div className="hidden md:block">
-          {/* <SimuladorPlanta /> */}
+        {/* <div className="hidden md:block">
+          <SimuladorPlanta />
           <ContadorPlanta
             estado={plantaEncendida}
             engineStartTimestamp={engineStart}
             totalMsAcumulados={acumulados}
           />
-        </div>
+        </div> */}
 
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -246,21 +246,21 @@ export default function App() {
               <StatusIndicator timestamp={AcPlanta} />
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-4 md:p-3 md:pb-8 md:h-full tv:h-auto">
+            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-4 md:p-3 md:pb-2 md:h-full tv:h-auto">
               <div
-                className={`flex flex-col md:flex-row items-center justify-between p-3 md:p-6 rounded-2xl md:rounded-4xl border-2 ${
+                className={`flex flex-col items-center rounded-2xl md:rounded-4xl border-2 gap-3 pt-4 ${
                   !redCorte
                     ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800"
                     : "bg-red-50 border-red-500 dark:bg-red-900/30 md:animate-pulse"
                 }`}
               >
-                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
-                  <RedAc
-                    className={`w-15 h-15 md:w-30 md:h-30 ${
-                      !redCorte ? "text-green-500" : "text-red-500 "
-                    }`}
-                  />
-
+                {/* <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left"> */}
+                <RedAc
+                  className={`w-15 h-15 md:w-30 md:h-30 border ${
+                    !redCorte ? "text-green-500" : "text-red-500 "
+                  }`}
+                />
+                <div className="flex flex-col items-center text-center">
                   <span className="font-black text-[10px] md:text-sm uppercase italic">
                     Red Comercial
                   </span>
@@ -275,24 +275,24 @@ export default function App() {
               </div>
 
               <div
-                className={`flex flex-col items-center justify-center rounded-2xl md:rounded-4xl border-2 ${
+                className={`flex flex-col items-center rounded-2xl md:rounded-4xl border-2 pb-3 sm:pb-0 ${
                   !plantaEncendida
                     ? "bg-amber-50/50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800"
                     : "bg-orange-50 border-red-500 dark:bg-orange-900/30"
                 }`}
               >
                 <Generador
-                  className={`w-15 h-15 md:w-30 md:h-30 ${
+                  className={`block w-15 h-15 md:w-30 md:h-30 border ${
                     !plantaEncendida
                       ? "text-amber-400"
                       : "text-red-500 md:animate-pulse"
                   }`}
                 />
-                <div className="flex flex-col items-center text-center">
-                  <span className="font-black text-[10px] md:text-sm uppercase italic">
-                    GENERADOR
-                  </span>
-                </div>
+                {/* <div className="flex flex-col items-center text-center"> */}
+                <span className="font-black text-[10px] md:text-sm uppercase italic">
+                  GENERADOR
+                </span>
+                {/* </div> */}
                 <span
                   className={`text-xs md:text-lg font-black ${
                     !plantaEncendida ? "text-amber-400" : "text-red-500"
@@ -300,37 +300,36 @@ export default function App() {
                 >
                   {plantaEncendida ? "ON" : "OFF"}
                 </span>
+                {/* <div className="flex  justify-center w-full"> */}
+                <div
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-fit h-fit cursor-pointer hover:scale-105 transition-transform"
+                >
+                  <ContadorPlanta
+                    estado={plantaEncendida}
+                    engineStartTimestamp={engineStart}
+                    totalMsAcumulados={acumulados}
+                  />
+                  {/* </div> */}
+                </div>
+
+                <ModalUpdateHorometro
+                  isOpen={isModalOpen}
+                  onClose={() => setIsModalOpen(false)}
+                  onSave={handleUpdateMs}
+                  // Pasamos el valor actual convertido a string de 6 dígitos
+                  valorActual={
+                    Math.floor(datosHorometro.totalMs / 3600000)
+                      .toString()
+                      .padStart(5, "0") +
+                    Math.floor(
+                      ((datosHorometro.totalMs / 3600000) % 1) * 10,
+                    ).toString()
+                  }
+                />
               </div>
             </div>
           </div>
-
-          <div className="flex md:hidden justify-center w-full">
-            <div
-              onClick={() => setIsModalOpen(true)}
-              className="w-fit h-fit cursor-pointer hover:scale-105 transition-transform"
-            >
-              <ContadorPlanta
-                estado={plantaEncendida}
-                engineStartTimestamp={engineStart}
-                totalMsAcumulados={acumulados}
-              />
-            </div>
-          </div>
-
-          <ModalUpdateHorometro
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSave={handleUpdateMs}
-            // Pasamos el valor actual convertido a string de 6 dígitos
-            valorActual={
-              Math.floor(datosHorometro.totalMs / 3600000)
-                .toString()
-                .padStart(5, "0") +
-              Math.floor(
-                ((datosHorometro.totalMs / 3600000) % 1) * 10,
-              ).toString()
-            }
-          />
 
           {/* Estadísticas solo para TV (XL) */}
           <section className="hidden tv:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
