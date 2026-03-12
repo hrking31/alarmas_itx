@@ -154,8 +154,6 @@ export default function App() {
       handleError,
     );
 
-    // setLoading(false);
-
     return () => {
       unsubSensores();
       unsubUmbral();
@@ -163,13 +161,6 @@ export default function App() {
       unsubHeartbeat();
       unsubEnergia();
     };
-    // } catch (err) {
-    //   showNotif(
-    //     "error",
-    //     "FALLO DE ENLACE: Error al conectar con el servidor de datos",
-    //   );
-    //   setLoading(false);
-    // }
   }, []);
 
   const AcPlanta = heartbeat?.AcPlanta?.timestamp;
@@ -211,14 +202,7 @@ export default function App() {
           </div>
         </button>
 
-        {/* <div className="hidden md:block">
-          <SimuladorPlanta />
-          <ContadorPlanta
-            estado={plantaEncendida}
-            engineStartTimestamp={engineStart}
-            totalMsAcumulados={acumulados}
-          />
-        </div> */}
+        {/* <SimuladorPlanta /> */}
 
         <button
           onClick={() => setDarkMode(!darkMode)}
@@ -236,7 +220,7 @@ export default function App() {
       <main className="flex-1 mx-auto w-full p-4 md:p-10 flex flex-col xl:grid xl:grid-cols-12 gap-4 md:gap-12 md:overflow-hidden">
         {/* PANEL ENERGÍA - Más delgado en móvil */}
         <section className="flex-1 xl:flex-none xl:col-span-4 tv:col-span-5! flex flex-col gap-4">
-          <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-xl border border-slate-100 dark:border-slate-800 h-full tv:h-auto">
+          <div className="bg-white dark:bg-slate-900 p-4 md:p-8 rounded-4xl md:rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 h-full tv:h-auto">
             <div className="flex justify-between items-start">
               <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 md:mb-0 flex items-center gap-2">
                 <MdOutlinePower size={16} className="text-blue-500" />{" "}
@@ -246,17 +230,17 @@ export default function App() {
               <StatusIndicator timestamp={AcPlanta} />
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-4 md:p-3 md:pb-2 md:h-full tv:h-auto">
+            <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-4 md:p-2 md:pb-2 md:h-full tv:h-auto">
+              {/* INDICADOR ESTADO RED */}
               <div
-                className={`flex flex-col items-center rounded-2xl md:rounded-4xl border-2 gap-3 pt-4 ${
+                className={`flex flex-col items-center justify-center rounded-2xl md:rounded-4xl border-2 gap-1 ${
                   !redCorte
                     ? "bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-800"
                     : "bg-red-50 border-red-500 dark:bg-red-900/30 md:animate-pulse"
                 }`}
               >
-                {/* <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left"> */}
                 <RedAc
-                  className={`w-15 h-15 md:w-30 md:h-30 border ${
+                  className={`w-15 h-25 md:w-30 md:h-25 ${
                     !redCorte ? "text-green-500" : "text-red-500 "
                   }`}
                 />
@@ -266,7 +250,7 @@ export default function App() {
                   </span>
                 </div>
                 <span
-                  className={`text-xs md:text-lg font-black ${
+                  className={`text-xs md:text-lg font-black pb-2 ${
                     !redCorte ? "text-green-600" : "text-red-600"
                   }`}
                 >
@@ -274,25 +258,26 @@ export default function App() {
                 </span>
               </div>
 
+              {/* INDICADOR ESTADO GENERADOR */}
               <div
-                className={`flex flex-col items-center rounded-2xl md:rounded-4xl border-2 pb-3 sm:pb-0 ${
+                className={`flex flex-col items-center justify-center rounded-2xl md:rounded-4xl border-2 ${
                   !plantaEncendida
                     ? "bg-amber-50/50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800"
                     : "bg-orange-50 border-red-500 dark:bg-orange-900/30"
                 }`}
               >
                 <Generador
-                  className={`block w-15 h-15 md:w-30 md:h-30 border ${
+                  className={`block w-30 h-14 md:w-60 md:h-18 ${
                     !plantaEncendida
                       ? "text-amber-400"
                       : "text-red-500 md:animate-pulse"
                   }`}
                 />
-                {/* <div className="flex flex-col items-center text-center"> */}
+
                 <span className="font-black text-[10px] md:text-sm uppercase italic">
                   GENERADOR
                 </span>
-                {/* </div> */}
+
                 <span
                   className={`text-xs md:text-lg font-black ${
                     !plantaEncendida ? "text-amber-400" : "text-red-500"
@@ -300,17 +285,16 @@ export default function App() {
                 >
                   {plantaEncendida ? "ON" : "OFF"}
                 </span>
-                {/* <div className="flex  justify-center w-full"> */}
+
                 <div
                   onClick={() => setIsModalOpen(true)}
-                  className="w-fit h-fit cursor-pointer hover:scale-105 transition-transform"
+                  className="w-fit h-fit cursor-pointer hover:scale-105 transition-transform pb-2"
                 >
                   <ContadorPlanta
                     estado={plantaEncendida}
                     engineStartTimestamp={engineStart}
                     totalMsAcumulados={acumulados}
                   />
-                  {/* </div> */}
                 </div>
 
                 <ModalUpdateHorometro
@@ -358,8 +342,22 @@ export default function App() {
         <section className="flex-1 xl:flex-none xl:col-span-8 tv:col-span-7! flex flex-col">
           <div className="grid grid-cols-2 gap-3 md:gap-10 flex-1">
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
+              const temperatura = dataSensores.temperatura;
+              const humedad = dataSensores.humedad;
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
+              const sensorOffline =
+                !heartbeatSensor || Date.now() - heartbeatSensor > 120000;
+              const tempMostrar =
+                sensorOffline || isNaN(Number(temperatura))
+                  ? "—"
+                  : Number(temperatura).toFixed(1);
+
+              const humMostrar =
+                sensorOffline || isNaN(Number(humedad))
+                  ? "—"
+                  : Number(humedad).toFixed(1);
               const esCritico =
+                !sensorOffline &&
                 dataSensores.temperatura >= (umbral?.alto ?? Infinity);
               const nombreSala = sala.replace("_", " ");
 
@@ -392,7 +390,7 @@ export default function App() {
                             esCritico ? "text-red-600" : "dark:text-white"
                           }`}
                         >
-                          {dataSensores.temperatura?.toFixed(1)}
+                          {tempMostrar}
                           <span className="text-xs md:text-2xl font-bold ml-2">
                             ° C
                           </span>
@@ -410,7 +408,10 @@ export default function App() {
 
                       <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
                         <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
-                          {dataSensores.humedad?.toFixed(1)}
+                          {/* {sensorOffline
+                            ? "—"
+                            : dataSensores.humedad?.toFixed(1)} */}
+                          {humMostrar}
                           <span className="text-xs md:text-2xl font-bold ml-2">
                             %
                           </span>
@@ -445,7 +446,7 @@ export default function App() {
 
       <Footer />
 
-      {/* MODAL GRFICA */}
+      {/* MODAL GRÁFICA */}
       {selectedSala && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm transition-all">
           {/* Contenedor del Modal */}
