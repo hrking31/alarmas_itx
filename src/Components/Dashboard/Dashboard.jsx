@@ -8,10 +8,12 @@ import { RedAc } from "../../Components/Icons/RedAc.jsx";
 import { Generador } from "../../Components/Icons/Generador.jsx";
 import { MdOutlinePower } from "react-icons/md";
 import { IoMdThermometer } from "react-icons/io";
+import { IoBatteryFull } from "react-icons/io5";
 import { WiHumidity } from "react-icons/wi";
 import { FaRegLightbulb, FaTimes } from "react-icons/fa";
 import { useDarkMode } from "../../Context/DarkModeContext";
 import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.jsx";
+import StatusBluetooth from "../../Components/StatusBluetooth/StatusBluetooth.jsx";
 import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
 import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
 import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
@@ -168,6 +170,7 @@ export default function App() {
   const plantaEncendida = planta === 1;
   const engineStart = engineStartTimestamp || 0;
   const acumulados = totalMsAcumulados || 0;
+  console.log("sensores", sensores);
 
   if (loading) {
     return (
@@ -344,18 +347,29 @@ export default function App() {
             {Object.entries(sensores || {}).map(([sala, dataSensores]) => {
               const temperatura = dataSensores.temperatura;
               const humedad = dataSensores.humedad;
+              const bateria = dataSensores.bateria;
+              const heartbeatBluetooth = dataSensores.timestamp;
+              const bluetoothOffline =
+                heartbeatBluetooth && Date.now() - heartbeatBluetooth > 90000;
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const sensorOffline =
-                !heartbeatSensor || Date.now() - heartbeatSensor > 120000;
+                !heartbeatSensor || Date.now() - heartbeatSensor > 90000;
+
               const tempMostrar =
-                sensorOffline || isNaN(Number(temperatura))
+                sensorOffline || bluetoothOffline || isNaN(Number(temperatura))
                   ? "—"
                   : Number(temperatura).toFixed(1);
 
               const humMostrar =
-                sensorOffline || isNaN(Number(humedad))
+                sensorOffline || bluetoothOffline || isNaN(Number(humedad))
                   ? "—"
                   : Number(humedad).toFixed(1);
+
+              const batMostrar =
+                sensorOffline || bluetoothOffline || isNaN(Number(bateria))
+                  ? "—"
+                  : Number(bateria).toFixed(0);
+
               const esCritico =
                 !sensorOffline &&
                 dataSensores.temperatura >= (umbral?.alto ?? Infinity);
@@ -378,8 +392,26 @@ export default function App() {
                         {nombreSala}
                       </h3>
                     </div>
-                    {/* INDICADOR DE CONEXIÓN */}
-                    <StatusIndicator timestamp={heartbeatSensor} />
+
+                    {/* COLUMNA ESTADO */}
+                    <div className="flex flex-col items-end gap-1">
+                      {/* INDICADOR DE CONEXIÓN */}
+                      <StatusIndicator timestamp={heartbeatSensor} />
+                      {heartbeatBluetooth && (
+                        <StatusBluetooth timestamp={heartbeatBluetooth} />
+                      )}
+
+                      {/* INDICADOR DE BATERÍA */}
+                      {bateria !== undefined && bateria !== null && (
+                        <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                          <IoBatteryFull className="w-3 h-3 md:w-5 md:h-5" />
+
+                          <span className="text-[10px] md:text-sm font-bold">
+                            {batMostrar}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex justify-center items-center flex-1">
@@ -408,9 +440,6 @@ export default function App() {
 
                       <div className="flex items-center md:block gap-2 border-t md:border-t-0 md:border-l-2 border-slate-100 dark:border-slate-800 pt-1 md:pt-0 md:pl-8">
                         <p className="text-2xl md:text-3xl lg:text-4xl xl:text-4xl 2xl:text-5xl font-black tracking-tighter text-cyan-500 dark:text-cyan-400">
-                          {/* {sensorOffline
-                            ? "—"
-                            : dataSensores.humedad?.toFixed(1)} */}
                           {humMostrar}
                           <span className="text-xs md:text-2xl font-bold ml-2">
                             %
