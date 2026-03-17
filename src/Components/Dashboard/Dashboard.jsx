@@ -12,8 +12,11 @@ import { IoBatteryFull } from "react-icons/io5";
 import { WiHumidity } from "react-icons/wi";
 import { FaRegLightbulb, FaTimes } from "react-icons/fa";
 import { useDarkMode } from "../../Context/DarkModeContext";
-import StatusIndicator from "../../Components/StatusIndicator/StatusIndicator.jsx";
-import StatusBluetooth from "../../Components/StatusBluetooth/StatusBluetooth.jsx";
+import StatusIndicadorElectrico from "../../Components/StatusIndicadorElectrico/StatusIndicadorElectrico.jsx";
+import {
+  StatusWifi,
+  StatusBluetooth,
+} from "../../Components/StatusIndicator/StatusIndicator.jsx";
 import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiempoReal.jsx";
 import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
 import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
@@ -170,7 +173,6 @@ export default function App() {
   const plantaEncendida = planta === 1;
   const engineStart = engineStartTimestamp || 0;
   const acumulados = totalMsAcumulados || 0;
-  console.log("sensores", sensores);
 
   if (loading) {
     return (
@@ -230,7 +232,7 @@ export default function App() {
                 Suministro Eléctrico RCA SBL
               </h2>
               {/* INDICADOR DE CONEXIÓN */}
-              <StatusIndicator timestamp={AcPlanta} />
+              <StatusIndicadorElectrico timestamp={AcPlanta} />
             </div>
 
             <div className="grid grid-cols-2 xl:grid-cols-1 tv:grid-cols-2! gap-4 md:p-2 md:pb-2 md:h-full tv:h-auto">
@@ -348,30 +350,38 @@ export default function App() {
               const temperatura = dataSensores.temperatura;
               const humedad = dataSensores.humedad;
               const bateria = dataSensores.bateria;
-              const heartbeatBluetooth = dataSensores.timestamp;
-              const bluetoothOffline =
-                heartbeatBluetooth && Date.now() - heartbeatBluetooth > 90000;
+
+              // Si es Sala 4 y su estado Bluetooth
+              const esSala4 = sala === "Sala_4";
+              const bluetoothOK = dataSensores?.estado === "online";
+
+              // Estado del ESP (Sala 1, 2,3)
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
-              const sensorOffline =
-                !heartbeatSensor || Date.now() - heartbeatSensor > 90000;
+              const espOnline =
+                heartbeatSensor && Date.now() - heartbeatSensor < 90000;
+
+              // Si es Sala 4, necesita ESP + BT. Si es otra, solo ESP.
+              const conexionTotalOk = esSala4
+                ? espOnline && bluetoothOK
+                : espOnline;
 
               const tempMostrar =
-                sensorOffline || bluetoothOffline || isNaN(Number(temperatura))
+                !conexionTotalOk || isNaN(Number(temperatura))
                   ? "—"
                   : Number(temperatura).toFixed(1);
 
               const humMostrar =
-                sensorOffline || bluetoothOffline || isNaN(Number(humedad))
+                !conexionTotalOk || isNaN(Number(humedad))
                   ? "—"
                   : Number(humedad).toFixed(1);
 
               const batMostrar =
-                sensorOffline || bluetoothOffline || isNaN(Number(bateria))
+                !conexionTotalOk || isNaN(Number(bateria))
                   ? "—"
                   : Number(bateria).toFixed(0);
 
               const esCritico =
-                !sensorOffline &&
+                conexionTotalOk &&
                 dataSensores.temperatura >= (umbral?.alto ?? Infinity);
               const nombreSala = sala.replace("_", " ");
 
@@ -395,12 +405,11 @@ export default function App() {
 
                     {/* COLUMNA ESTADO */}
                     <div className="flex flex-col items-end gap-1">
-                      {/* INDICADOR DE CONEXIÓN */}
-                      <StatusIndicator timestamp={heartbeatSensor} />
-                      {heartbeatBluetooth && (
-                        <StatusBluetooth timestamp={heartbeatBluetooth} />
-                      )}
-
+                      <div className="flex flex-row gap-2">
+                        {/* INDICADOR DE CONEXIÓN */}
+                        <StatusWifi isOnline={espOnline} />
+                        {esSala4 && <StatusBluetooth isOnline={bluetoothOK} />}
+                      </div>
                       {/* INDICADOR DE BATERÍA */}
                       {bateria !== undefined && bateria !== null && (
                         <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
