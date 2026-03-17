@@ -351,14 +351,15 @@ export default function App() {
               const humedad = dataSensores.humedad;
               const bateria = dataSensores.bateria;
 
-              // Si es Sala 4 y su estado Bluetooth
-              const esSala4 = sala === "Sala_4";
-              const bluetoothOK = dataSensores?.estado === "online";
-
               // Estado del ESP (Sala 1, 2,3)
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const espOnline =
                 heartbeatSensor && Date.now() - heartbeatSensor < 90000;
+
+              // Si es Sala 4 y su estado Bluetooth
+              const esSala4 = sala === "Sala_4";
+              const bluetoothOK =
+                espOnline && dataSensores?.estado === "online";
 
               // Si es Sala 4, necesita ESP + BT. Si es otra, solo ESP.
               const conexionTotalOk = esSala4
