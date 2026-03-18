@@ -30,35 +30,59 @@ export default function GraficaTiempoReal({
   const procesarRegistros = (registrosBrutos) => {
     if (!registrosBrutos || registrosBrutos.length === 0) return [];
 
-    const registros = registrosBrutos.sort((a, b) => a.ts - b.ts);
-    const listaProcesada = [];
-    const UMBRAL_MS = 2 * 60 * 1000; // 2 minutos
+    const mapa = {};
 
-    registros.forEach((reg, index) => {
-      if (index > 0) {
-        const diferencia = reg.ts - registros[index - 1].ts;
-        if (diferencia > UMBRAL_MS) {
-          listaProcesada.push({
-            ts: registros[index - 1].ts + 1000,
-            hora: "",
-            temp: null,
-          });
-        }
+    registrosBrutos.forEach((reg) => {
+      const minutoTs = Math.floor(reg.ts / 60000) * 60000;
+
+      if (!mapa[minutoTs]) {
+        mapa[minutoTs] = {
+          ts: minutoTs,
+          hora: new Date(minutoTs).toLocaleTimeString("es-CO", {
+            hour: "numeric",
+            minute: "2-digit",
+          }),
+          temp: null,
+        };
       }
 
-      listaProcesada.push({
-        ts: reg.ts,
-        hora: new Date(reg.ts).toLocaleTimeString("es-CO", {
-          hour: "numeric",
-          minute: "2-digit",
-        }),
-        // Manejamos tanto el campo "t" (RTDB) como "temp" si fuera el caso
-        temp:
-          reg.t === "null" || reg.t === undefined ? (reg.temp ?? null) : reg.t,
-      });
+      mapa[minutoTs].temp =
+        reg.t === "null" || reg.t === undefined ? (reg.temp ?? null) : reg.t;
     });
 
-    return listaProcesada;
+    return Object.values(mapa).sort((a, b) => a.ts - b.ts);
+  };
+
+  const completarHuecos = (data) => {
+    if (!data.length) return [];
+
+    const resultado = [];
+
+    for (let i = 0; i < data.length - 1; i++) {
+      resultado.push(data[i]);
+
+      const actual = data[i].ts;
+      const siguiente = data[i + 1].ts;
+
+      if (siguiente - actual > 60000) {
+        let cursor = actual + 60000;
+
+        while (cursor < siguiente) {
+          resultado.push({
+            ts: cursor,
+            hora: new Date(cursor).toLocaleTimeString("es-CO", {
+              hour: "numeric",
+              minute: "2-digit",
+            }),
+            temp: null,
+          });
+          cursor += 60000;
+        }
+      }
+    }
+
+    resultado.push(data[data.length - 1]);
+    return resultado;
   };
 
   useEffect(() => {
@@ -102,7 +126,10 @@ export default function GraficaTiempoReal({
           }
         });
 
-        setDatos(procesarRegistros(registrosExtraidos));
+        const base = procesarRegistros(registrosExtraidos);
+        const conHuecos = completarHuecos(base);
+
+        setDatos(conHuecos);
         setLoading(false);
       });
 
@@ -121,7 +148,10 @@ export default function GraficaTiempoReal({
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            setDatos(procesarRegistros(data.lecturas));
+            const base = procesarRegistros(data.lecturas);
+            const conHuecos = completarHuecos(base);
+
+            setDatos(conHuecos);
           } else {
             showNotif(
               "info",
