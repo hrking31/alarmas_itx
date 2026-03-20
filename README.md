@@ -20,7 +20,7 @@
 
 | Dashboard | Configuración & Alertas | Actualizar Horómetro | Gráficas en Tiempo Real |
 | :--- | :--- | :--- | :--- |
-| <img src="./src/assets/DashboardPrincipalDark.webp" height="400"> | <img src="./src/assets/DashboardConfigDark.webp" height="400"> | <img src="./src/assets/Horometro.webp" height="400"> | <img src="./src/assets/Graficamovil.webp" height="400"> |
+| <img src="./src/assets/DashboardPrincipalDark.webp" height="400"> | <img src="./src/assets/DashboardConfigDark.webp" height="400"> | <img src="./src/assets/Horometro.webp" height="400"> | <img src="./src/assets/GraficaMovil.webp" height="400"> |
 
 ---
 
