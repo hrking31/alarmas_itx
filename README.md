@@ -18,9 +18,9 @@
 > [!TIP]
 > La interfaz utiliza efectos de cristal (Glassmorphism), bordes neón vibrantes y un modo oscuro profundo para una visualización técnica de alto impacto.
 
-| Dashboard | Configuración & Alertas | Gráficas en Tiempo Real |
-| :--- | :--- | :--- |
-| <img src="./src/assets/DashboardPrincipalDark.webp" height="400"> | <img src="./src/assets/DashboardConfigDark.webp" height="400"> | <img src="./src/assets/Graficamovil.webp" height="400"> |
+| Dashboard | Configuración & Alertas | Actualizar Horómetro | Gráficas en Tiempo Real |
+| :--- | :--- | :--- | :--- |
+| <img src="./src/assets/DashboardPrincipalDark.webp" height="400"> | <img src="./src/assets/DashboardConfigDark.webp" height="400"> | <img src="./src/assets/Horometro.webp" height="400"> | <img src="./src/assets/Graficamovil.webp" height="400"> |
 
 ---
 
