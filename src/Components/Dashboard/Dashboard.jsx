@@ -23,7 +23,6 @@ import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
 import ContadorPlanta from "../ContadorPlanta/ContadorPlanta.jsx";
 import { useAppContext } from "../../Context/AppContext";
 import Loading from "../Loading/Loading.jsx";
-import SimuladorPlanta from "../SimuladorPlanta/SimuladorPlanta.jsx";
 import ModalUpdateHorometro from "../ModalUpdateHorometro/ModalUpdateHorometro.jsx";
 
 export default function App() {
@@ -110,6 +109,7 @@ export default function App() {
     const umbralRef = ref(database, "configuracion/umbral");
     const horasRef = ref(database, "configuracion/horas");
     const heartbeatRef = ref(database, "heartbeat");
+    // const energiaRef = ref(database, "monitoreo_energia");
     const energiaRef = ref(database, "energia");
 
     const unsubSensores = onValue(
@@ -168,7 +168,8 @@ export default function App() {
     };
   }, []);
 
-  const AcPlanta = heartbeat?.AcPlanta?.timestamp;
+  const AcPlanta = heartbeat?.AcPlant?.timestamp;
+  // const AcPlanta = heartbeat?.Sala_sb?.timestamp;
   const redCorte = ac === 1;
   const plantaEncendida = planta === 1;
   const engineStart = engineStartTimestamp || 0;
@@ -206,8 +207,6 @@ export default function App() {
             </p>
           </div>
         </button>
-
-        {/* <SimuladorPlanta /> */}
 
         <button
           onClick={() => setDarkMode(!darkMode)}

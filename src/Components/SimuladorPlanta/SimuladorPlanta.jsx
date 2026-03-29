@@ -25,7 +25,6 @@ const SimuladorPlanta = () => {
       console.log("⚠️ Ya está encendida");
       return;
     }
-
     await update(energiaRef, {
       Planta: 1,
       engineStartTimestamp: Date.now(),
