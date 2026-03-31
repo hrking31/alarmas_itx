@@ -109,8 +109,7 @@ export default function App() {
     const umbralRef = ref(database, "configuracion/umbral");
     const horasRef = ref(database, "configuracion/horas");
     const heartbeatRef = ref(database, "heartbeat");
-    // const energiaRef = ref(database, "monitoreo_energia");
-    const energiaRef = ref(database, "energia");
+    const energiaRef = ref(database, "monitoreo_energia");
 
     const unsubSensores = onValue(
       sensoresRef,
@@ -168,8 +167,7 @@ export default function App() {
     };
   }, []);
 
-  const AcPlanta = heartbeat?.AcPlant?.timestamp;
-  // const AcPlanta = heartbeat?.Sala_sb?.timestamp;
+  const AcPlanta = heartbeat?.Sala_sb?.timestamp;
   const redCorte = ac === 1;
   const plantaEncendida = planta === 1;
   const engineStart = engineStartTimestamp || 0;
