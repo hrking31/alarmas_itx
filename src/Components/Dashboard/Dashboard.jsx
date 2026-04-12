@@ -21,14 +21,14 @@ import GraficasTiempoReal from "../../Components/GraficasTiempoReal/GraficasTiem
 import GraficaComparativa from "../../Components/GraficaComparativa/GraficaComparativa.jsx";
 import DateOnlyPicker from "../../Components/DateOnlyPicker/DateonlyPicker.jsx";
 import ContadorPlanta from "../ContadorPlanta/ContadorPlanta.jsx";
-import { useAppContext } from "../../Context/AppContext";
+import { useNotificationContext } from "../../Context/NotificationContext.jsx";
 import Loading from "../Loading/Loading.jsx";
 import ModalUpdateHorometro from "../ModalUpdateHorometro/ModalUpdateHorometro.jsx";
 
 export default function App() {
   const navigate = useNavigate();
   const { darkMode, setDarkMode } = useDarkMode();
-  const { showNotif } = useAppContext();
+  const { showNotif } = useNotificationContext();
   const [sensores, setSensores] = useState(null);
   const [umbral, setUmbral] = useState(null);
   const [horas, setHoras] = useState(null);
@@ -36,6 +36,7 @@ export default function App() {
   const [ac, setAc] = useState(0);
   const [planta, setPlanta] = useState(0);
   const [engineStartTimestamp, setEngineStartTimestamp] = useState(0);
+  const [engineStopTimestamp, setEngineStopTimestamp] = useState(0);
   const [totalMsAcumulados, setTotalMsAcumulados] = useState(0);
   const [selectedSala, setSelectedSala] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,28 +49,16 @@ export default function App() {
     window.matchMedia("(orientation: portrait)").matches,
   );
 
-  // Datos de RTBD
-  const [datosHorometro, setDatosHorometro] = useState({
-    totalMs: 45000000, // Ejemplo: 12.5 horas
-    estado: 0,
-  });
-
+  // Función para actualizar el horómetro en RTBD
   const handleUpdateMs = async (nuevoTotalMs) => {
     try {
-      const dbRef = ref(database, "energia");
+      const dbRef = ref(database, "monitoreo_energia");
 
       await update(dbRef, {
         totalMsAcumulados: nuevoTotalMs,
         // Se inicia al momento actual para que el contador empiece a sumar desde el nuevo valor calibrado
-        engineStartTimestamp: Date.now(),
+        engineStartTimestamp: 0,
       });
-
-      // Se actualiza el estado local
-      setDatosHorometro((prev) => ({
-        ...prev,
-        totalMsAcumulados: nuevoTotalMs,
-        engineStartTimestamp: Date.now(),
-      }));
 
       showNotif("success", "Sincronización exitosa: Horómetro actualizado");
     } catch (error) {
@@ -152,6 +141,7 @@ export default function App() {
           setPlanta(data.Planta);
           setAc(data.Ac);
           setEngineStartTimestamp(data.engineStartTimestamp);
+          setEngineStopTimestamp(data.engineStopTimestamp);
           setTotalMsAcumulados(data.totalMsAcumulados);
         }
       },
@@ -171,6 +161,7 @@ export default function App() {
   const redCorte = ac === 1;
   const plantaEncendida = planta === 1;
   const engineStart = engineStartTimestamp || 0;
+  const engineStop = engineStopTimestamp || 0;
   const acumulados = totalMsAcumulados || 0;
 
   if (loading) {
@@ -303,14 +294,12 @@ export default function App() {
                   isOpen={isModalOpen}
                   onClose={() => setIsModalOpen(false)}
                   onSave={handleUpdateMs}
-                  // Pasamos el valor actual convertido a string de 6 dígitos
+                  // Se pasamos el valor actual convertido a string de 6 dígitos
                   valorActual={
-                    Math.floor(datosHorometro.totalMs / 3600000)
+                    Math.floor(acumulados / 3600000)
                       .toString()
                       .padStart(5, "0") +
-                    Math.floor(
-                      ((datosHorometro.totalMs / 3600000) % 1) * 10,
-                    ).toString()
+                    Math.floor(((acumulados / 3600000) % 1) * 10).toString()
                   }
                 />
               </div>

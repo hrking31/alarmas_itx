@@ -12,7 +12,7 @@ import { ref, onValue } from "firebase/database";
 import { doc, getDoc } from "firebase/firestore";
 import { database, firestore } from "../../Firebase/Firebase.js";
 import { useDarkMode } from "../../Context/DarkModeContext";
-import { useAppContext } from "../../Context/AppContext";
+import { useNotificationContext } from "../../Context/NotificationContext.jsx";
 import Loading from "../Loading/Loading.jsx";
 
 export default function GraficaTiempoReal({
@@ -23,7 +23,7 @@ export default function GraficaTiempoReal({
   const [datos, setDatos] = useState([]);
   const { darkMode } = useDarkMode();
   const isDark = darkMode;
-  const { showNotif } = useAppContext();
+  const { showNotif } = useNotificationContext();
   const [loading, setLoading] = useState(true);
 
   // Función para procesar los registros RTDB o Firestore y detectar desconexiones

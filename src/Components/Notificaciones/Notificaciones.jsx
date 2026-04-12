@@ -6,10 +6,10 @@ import {
   FaTimes,
   FaQuestionCircle,
 } from "react-icons/fa";
-import { useAppContext } from "../../Context/AppContext";
+import { useNotificationContext } from "../../Context/NotificationContext.jsx";
 
 export default function Notificaciones() {
-  const { notif, setNotif } = useAppContext();
+  const { notif, setNotif } = useNotificationContext();
 
   useEffect(() => {
     if (notif.open && notif.type !== "confirm") {

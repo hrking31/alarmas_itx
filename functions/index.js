@@ -13,6 +13,15 @@ function getFechaLocal(diasAjuste = 0) {
   return fecha.toISOString().split("T")[0]; // Retorna "2026-02-06"
 }
 
+// CONSTANTE DE TIEMPO
+const DURACION_DECIMA_HORA = 6 * 60 * 1000; // 6 minutos = 0.1h
+
+// FUNCIÓN PARA CONVERTIR TIEMPO
+const msAHorometroSBL = (ms) => {
+  const totalDecimas = Math.floor(ms / DURACION_DECIMA_HORA);
+  return totalDecimas.toString().padStart(6, "0");
+};
+
 // FUNCIÓN DE TELEGRAM
 const enviarTelegram = async (botToken, receptores, texto) => {
   const fechaHoraTexto = new Date().toLocaleString("es-CO", {
@@ -107,50 +116,94 @@ exports.notificarTemperatura = onValueUpdated(
 
 // MONITOREO DE ENERGÍA (AC Y GENERADOR)
 exports.notificarEnergia = onValueUpdated(
-  "/monitoreo_energia/{tipoEnergia}",
+  "/monitoreo_energia",
   async (event) => {
-    const tipo = event.params.tipoEnergia; // Puede ser "Ac" o "Planta"
-    if (tipo !== "Ac" && tipo !== "Planta") return;
-
+    const antes = event.data.before.val();
+    const despues = event.data.after.val();
     const db = admin.database();
-    const estadoActual = event.data.after.val();
-    const estadoPrevio = event.data.before.val();
 
-    if (estadoActual === estadoPrevio) return null; //no hubo cambios
+    // FILTRO DE CAMBIOS REALES
+    const cambioAc = antes?.Ac !== despues?.Ac;
+    const cambioPlanta = antes?.Planta !== despues?.Planta;
 
-    const [configSnap, alertasSnap] = await Promise.all([
-      db.ref("/configuracion/telegram").get(),
-      db.ref(`/alertas/${tipo}Estado`).get(),
-    ]);
+    if (!cambioAc && !cambioPlanta) return null;
 
-    const { botToken, receptores } = configSnap.val() || {};
-    const estadoGuardado = alertasSnap.val();
+    // LECTURA DE CONFIG TELEGRAMA
+    const snap = await db.ref("/configuracion/telegram").get();
+    const { botToken, receptores } = snap.val() || {};
+    if (!botToken || !receptores) return null;
 
-    // Si no hay Telegram configurado y si el estado actual es igual al de alertas, salimos
-    if (!botToken || !receptores || estadoActual === estadoGuardado)
-      return null;
+    // MENSAJES
+    let mensajes = [];
+    let necesitaActualizarHorometro = false;
 
-    let mensaje = "";
-    if (tipo === "Ac") {
-      mensaje =
-        estadoActual === 0
+    if (cambioAc) {
+      mensajes.push(
+        despues.Ac === 0
           ? `✅ *ENERGÍA ELÉCTRICA RESTABLECIDA*\n🔌 Status: *AC ONLINE*`
-          : `⚠️ *CORTE DE ENERGÍA ELÉCTRICA*\n🔌 Status: *AC OFFLINE*`;
-    } else {
-      mensaje =
-        estadoActual === 0
-          ? `✅ *PLANTA ELÉCTRICA APAGADA*\n⚙️ Status: *GENERADOR EN REPOSO*`
-          : `⚠️ *PLANTA ELÉCTRICA ENCENDIDA*\n⚙️ Status: *GENERADOR ACTIVO*`;
+          : `⚠️ *CORTE DE ENERGÍA ELÉCTRICA*\n🔌 Status: *AC OFFLINE*`,
+      );
     }
+
+    if (cambioPlanta) {
+      if (despues.Planta === 0) {
+        necesitaActualizarHorometro = true;
+
+        const duracion =
+          (despues.engineStopTimestamp || 0) -
+          (despues.engineStartTimestamp || 0);
+
+        mensajes.push(
+          `✅ *PLANTA ELÉCTRICA APAGADA*\n⏱️ Ciclo: *${msAHorometroSBL(
+            duracion,
+          )}*\n⚙️ Status: *REPOSO*`,
+        );
+      } else {
+        mensajes.push(
+          `⚠️ *PLANTA ELÉCTRICA ENCENDIDA*\n⚙️ Status: *GENERADOR ACTIVO*`,
+        );
+      }
+    }
+
+    const mensajeFinalTexto = mensajes.join("\n\n");
 
     try {
-      await Promise.all([
-        enviarTelegram(botToken, receptores, mensaje),
-        db.ref(`/alertas/${tipo}Estado`).set(estadoActual),
-      ]);
+      const tareas = [];
+
+      // ENVIÓ A TELEGRAM
+      tareas.push(enviarTelegram(botToken, receptores, mensajeFinalTexto));
+
+      if (necesitaActualizarHorometro) {
+        const ref = db.ref("/monitoreo_energia");
+
+        await ref.transaction((current) => {
+          if (!current) return current;
+
+          const start = current.engineStartTimestamp || 0;
+          const stop = current.engineStopTimestamp || 0;
+
+          // Evitar duplicación
+          if (current.lastEngineStopProcessed === stop) {
+            return current;
+          }
+
+          const diff = stop - start;
+
+          if (diff > 0) {
+            current.totalMsAcumulados = (current.totalMsAcumulados || 0) + diff;
+
+            current.lastEngineStopProcessed = stop;
+          }
+
+          return current;
+        });
+      }
+
+      await Promise.all(tareas);
     } catch (error) {
-      console.error("Error en proceso final:", error);
+      console.error("❌ Error general:", error);
     }
+
     return null;
   },
 );
@@ -340,3 +393,4 @@ exports.respaldarHistorialDiario = onSchedule(
     return null;
   },
 );
+

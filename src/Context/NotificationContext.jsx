@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useCallback } from "react";
 
-const AppContext = createContext();
+const NotificationContext = createContext();
 
-export function AppProvider({ children }) {
+export function NotificationProvider({ children }) {
   const [notif, setNotif] = useState({
     open: false,
     type: "info",
@@ -51,18 +51,18 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <AppContext.Provider
+    <NotificationContext.Provider
       value={{
         notif,
         setNotif,
         showNotif,
         confirmAction,
-        closeNotif, // Es importante exportar también la función de cierre
+        closeNotif, 
       }}
     >
       {children}
-    </AppContext.Provider>
+    </NotificationContext.Provider>
   );
 }
 
-export const useAppContext = () => useContext(AppContext);
+export const useNotificationContext = () => useContext(NotificationContext);

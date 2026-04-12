@@ -1,10 +1,14 @@
-import  { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDarkMode } from "../../Context/DarkModeContext";
 
 const ModalUpdateHorometro = ({ isOpen, onClose, onSave, valorActual }) => {
-  // String de 6 dígitos que muestra el contador
-  const [digitos, setDigitos] = useState(valorActual.split("").map(Number));
   const { darkMode } = useDarkMode();
+  // String de 6 dígitos que muestra el contador
+  const [digitos, setDigitos] = useState([0, 0, 0, 0, 0, 0]);
+
+  useEffect(() => {
+    setDigitos(valorActual.split("").map(Number));
+  }, [valorActual]);
 
   if (!isOpen) return null;
 

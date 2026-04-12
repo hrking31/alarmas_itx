@@ -14,7 +14,7 @@ import {
   FaChartLine,
 } from "react-icons/fa";
 import { useAuth } from "../../Context/AuthContext.jsx";
-import { useAppContext } from "../../Context/AppContext";
+import { useNotificationContext } from "../../Context/NotificationContext";
 import { useDarkMode } from "../../Context/DarkModeContext";
 import { IoShieldCheckmarkSharp } from "react-icons/io5";
 import Loading from "../Loading/Loading.jsx";
@@ -22,7 +22,7 @@ import Footer from "../../Components/Footer/Footer.jsx";
 
 export default function ControlDashboard() {
   const navigate = useNavigate();
-  const { showNotif, confirmAction } = useAppContext();
+  const { showNotif, confirmAction } = useNotificationContext();
   const { logout } = useAuth();
   const { darkMode, setDarkMode } = useDarkMode();
   const [token, setToken] = useState("");
