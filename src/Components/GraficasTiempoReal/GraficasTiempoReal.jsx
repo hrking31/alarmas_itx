@@ -237,7 +237,7 @@ export default function GraficaTiempoReal({
           />
 
           <Area
-            type="monotone"
+            type="basis"
             dataKey="temp"
             stroke="#22d3ee"
             strokeWidth={3}

@@ -291,7 +291,7 @@ export default function GraficaComparativa() {
           {Object.keys(COLORES_SALAS).map((salaId) => (
             <Area
               key={salaId}
-              type="monotone"
+              type="basis"
               dataKey={salaId}
               stroke={COLORES_SALAS[salaId]}
               fill={`url(#grad_${salaId})`}
