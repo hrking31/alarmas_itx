@@ -340,7 +340,7 @@ export default function App() {
               // Estado del ESP (Sala 1, 2,3)
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
               const espOnline =
-                heartbeatSensor && Date.now() - heartbeatSensor < 90000;
+                heartbeatSensor && Date.now() - heartbeatSensor < 170000;
 
               // Si es Sala 4 y su estado Bluetooth
               const esSala4 = sala === "Sala_4";
