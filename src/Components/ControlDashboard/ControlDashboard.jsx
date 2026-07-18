@@ -20,6 +20,50 @@ import { IoShieldCheckmarkSharp } from "react-icons/io5";
 import Loading from "../Loading/Loading.jsx";
 import Footer from "../../Components/Footer/Footer.jsx";
 
+const SALAS = ["Sala_1", "Sala_2", "Sala_3", "Sala_4"];
+
+// Fuera del componente para que React no la recree (y pierda estado) en cada render
+function UsersList({ chatList, onRemove }) {
+  return (
+    <div className="overflow-y-auto scrollbar-custom divide-y divide-slate-100 dark:divide-slate-800/50">
+      {chatList.length > 0 ? (
+        chatList.map((chat) => (
+          <div
+            key={chat.id}
+            className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center font-black text-emerald-600 dark:text-emerald-500 text-xs shadow-sm">
+                {chat.name.charAt(0)}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  {chat.name}
+                </p>
+                <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                  ID: {chat.id}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => onRemove(chat)}
+              className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+            >
+              <FaTrashAlt className="text-sm" />
+            </button>
+          </div>
+        ))
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+          <p className="text-xs uppercase tracking-widest font-bold p-4">
+            Sin receptores configurados
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ControlDashboard() {
   const navigate = useNavigate();
   const { showNotif, confirmAction } = useNotificationContext();
@@ -30,7 +74,8 @@ export default function ControlDashboard() {
   const [chatName, setChatName] = useState("");
   const [chatId, setChatId] = useState("");
   const [chatList, setChatList] = useState([]);
-  const [tempMax, setTempMax] = useState("");
+  const [salaSeleccionada, setSalaSeleccionada] = useState(SALAS[0]);
+  const [tempPorSala, setTempPorSala] = useState({});
   const [horasMax, setHorasMax] = useState("");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +97,13 @@ export default function ControlDashboard() {
           setIsTokenSaved(false);
         }
         setChatList(data.telegram?.receptores || []);
-        setTempMax(data.umbral?.alto || "");
+        // Umbral propio de cada sala; si aún no se ha configurado uno individual,
+        // se muestra el valor global "alto" como punto de partida (compatibilidad hacia atrás)
+        const nuevoTempPorSala = {};
+        SALAS.forEach((sala) => {
+          nuevoTempPorSala[sala] = data.umbral?.[sala] ?? data.umbral?.alto ?? "";
+        });
+        setTempPorSala(nuevoTempPorSala);
         setHorasMax(data.horas?.visible || "");
       }
       setLoading(false);
@@ -116,7 +167,7 @@ export default function ControlDashboard() {
   // Eliminar Receptor
   const removeChat = async (chatObj) => {
     const seguro = await confirmAction(
-      `¿Deseas eliminar a ${chatObj.first_name || "este contacto"} del sistema?`
+      `¿Deseas eliminar a ${chatObj.name || "este contacto"} del sistema?`
     );
 
     if (!seguro) return;
@@ -139,15 +190,22 @@ export default function ControlDashboard() {
     }
   };
 
-  // Guardar Umbral tempMax
-  const handleSaveThresholds = async (e) => {
+  // Guardar Umbral de la sala seleccionada
+  const handleSaveThreshold = async (e) => {
     e.preventDefault();
+    if (tempPorSala[salaSeleccionada] === "") {
+      showNotif("warning", "El campo del umbral está vacío");
+      return;
+    }
     try {
       await update(ref(database, "configuracion/umbral"), {
-        alto: Number(tempMax),
+        [salaSeleccionada]: Number(tempPorSala[salaSeleccionada]),
       });
 
-      showNotif("success", "Protocolo: Umbral alto actualizado correctamente");
+      showNotif(
+        "success",
+        `Protocolo: Umbral de ${salaSeleccionada.replace("_", " ")} actualizado correctamente`,
+      );
     } catch (error) {
       console.error(error);
       showNotif("error", "Fallo en la conexión con la base de datos");
@@ -157,6 +215,10 @@ export default function ControlDashboard() {
   // Guardar Horas visibles
   const handleSaveHours = async (e) => {
     e.preventDefault();
+    if (horasMax === "") {
+      showNotif("warning", "El campo de horas está vacío");
+      return;
+    }
     try {
       await update(ref(database, "configuracion/horas"), {
         visible: Number(horasMax),
@@ -168,46 +230,6 @@ export default function ControlDashboard() {
       showNotif("error", "Fallo en la conexión con la base de datos");
     }
   };
-
-  // Sub-componente lista nodos
-  const UsersList = () => (
-    <div className="overflow-y-auto scrollbar-custom divide-y divide-slate-100 dark:divide-slate-800/50">
-      {chatList.length > 0 ? (
-        chatList.map((chat) => (
-          <div
-            key={chat.id}
-            className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center font-black text-emerald-600 dark:text-emerald-500 text-xs shadow-sm">
-                {chat.name.charAt(0)}
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                  {chat.name}
-                </p>
-                <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
-                  ID: {chat.id}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => removeChat(chat)}
-              className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
-            >
-              <FaTrashAlt className="text-sm" />
-            </button>
-          </div>
-        ))
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-          <p className="text-xs uppercase tracking-widest font-bold p-4">
-            Sin receptores configurados
-          </p>
-        </div>
-      )}
-    </div>
-  );
 
   if (loading) return <Loading text="CARGANDO PROTOCOLOS..." />;
 
@@ -265,6 +287,8 @@ export default function ControlDashboard() {
             >
               <div className="flex gap-4">
                 <input
+                  id="bot-token"
+                  name="bot-token"
                   type="password"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
@@ -307,28 +331,51 @@ export default function ControlDashboard() {
             </h2>
           </div>
 
+          {/* Selector de sala: cada una tiene su propio umbral */}
+          <div className="grid grid-cols-4 gap-1 mb-2">
+            {SALAS.map((sala, i) => (
+              <button
+                key={sala}
+                type="button"
+                onClick={() => setSalaSeleccionada(sala)}
+                className={`py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${
+                  salaSeleccionada === sala
+                    ? "bg-orange-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
           <form
-            onSubmit={handleSaveThresholds}
+            onSubmit={handleSaveThreshold}
             className="flex flex-col flex-1 justify-evenly gap-2"
           >
             <div className="flex gap-4">
               <input
+                id="umbral-alto"
+                name="umbral-alto"
                 type="number"
-                value={tempMax}
+                value={tempPorSala[salaSeleccionada] ?? ""}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (/^\d*\.?\d*$/.test(val)) {
-                    setTempMax(val);
+                    setTempPorSala((prev) => ({
+                      ...prev,
+                      [salaSeleccionada]: val,
+                    }));
                   }
                 }}
-                placeholder="Máx °C"
+                placeholder={`Máx °C — ${salaSeleccionada.replace("_", " ")}`}
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm font-mono text-orange-600 dark:text-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
 
             <div className="flex flex-col ">
               <button className="mt-auto w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-2 md:py-3 rounded-lg text-[10px] uppercase tracking-widest">
-                Actualizar Rangos
+                Actualizar {salaSeleccionada.replace("_", " ")}
               </button>
             </div>
           </form>
@@ -349,6 +396,8 @@ export default function ControlDashboard() {
           >
             <div className="flex gap-4">
               <input
+                id="horas-visibles"
+                name="horas-visibles"
                 type="number"
                 value={horasMax}
                 onChange={(e) => {
@@ -397,6 +446,8 @@ export default function ControlDashboard() {
           >
             <div className="space-y-3 md:space-y-6">
               <input
+                id="receptor-nombre"
+                name="receptor-nombre"
                 type="text"
                 placeholder="Responsable"
                 value={chatName}
@@ -404,6 +455,8 @@ export default function ControlDashboard() {
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-sm text-slate-600 dark:text-slate-300 focus:outline-none"
               />
               <input
+                id="receptor-chat-id"
+                name="receptor-chat-id"
                 type="text"
                 placeholder="Chat ID"
                 value={chatId}
@@ -463,7 +516,7 @@ export default function ControlDashboard() {
           </div>
 
           <div className="md:flex flex-col overflow-y-auto">
-            <UsersList />
+            <UsersList chatList={chatList} onRemove={removeChat} />
           </div>
         </section>
       </div>
@@ -490,7 +543,7 @@ export default function ControlDashboard() {
                 <FaTimes />
               </button>
             </div>
-            <UsersList />
+            <UsersList chatList={chatList} onRemove={removeChat} />
           </div>
         </div>
       )}

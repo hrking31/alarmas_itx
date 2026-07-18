@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaWifi } from "react-icons/fa";
 
 export default function StatusIndicadorElectrico({ timestamp }) {
-  const [ahora, setAhora] = useState(Date.now());
+  const [ahora, setAhora] = useState(() => Date.now());
 
   useEffect(() => {
     const timer = setInterval(() => {

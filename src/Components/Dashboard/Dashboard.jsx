@@ -36,7 +36,6 @@ export default function App() {
   const [ac, setAc] = useState(0);
   const [planta, setPlanta] = useState(0);
   const [engineStartTimestamp, setEngineStartTimestamp] = useState(0);
-  const [engineStopTimestamp, setEngineStopTimestamp] = useState(0);
   const [totalMsAcumulados, setTotalMsAcumulados] = useState(0);
   const [selectedSala, setSelectedSala] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +47,13 @@ export default function App() {
   const [isPortrait, setIsPortrait] = useState(
     window.matchMedia("(orientation: portrait)").matches,
   );
+  // Solo montamos la gráfica comparativa (sección "TV") cuando realmente se va a ver;
+  // si se queda montada oculta (display:none), Recharts no puede medir su tamaño
+  // y repite la advertencia de "width/height 0" en consola en cada dato nuevo.
+  const [isTvLayout, setIsTvLayout] = useState(
+    window.matchMedia("(min-width: 1800px)").matches,
+  );
+  const [now, setNow] = useState(() => Date.now());
 
   // Función para actualizar el horómetro en RTBD
   const handleUpdateMs = async (nuevoTotalMs) => {
@@ -56,20 +62,26 @@ export default function App() {
 
       await update(dbRef, {
         totalMsAcumulados: nuevoTotalMs,
-        // Se inicia al momento actual para que el contador empiece a sumar desde el nuevo valor calibrado
-        engineStartTimestamp: 0,
+        // Si la planta sigue encendida NO podemos poner esto en 0: la próxima vez
+        // que se apague, la función en la nube restaría desde el timestamp 0 (época)
+        // y sumaría un número gigantesco al horómetro. Si sigue encendida, lo movemos
+        // a "ahora" para que el conteo en vivo siga siendo correcto desde el valor calibrado.
+        engineStartTimestamp: planta === 1 ? Date.now() : 0,
       });
 
       showNotif("success", "Sincronización exitosa: Horómetro actualizado");
     } catch (error) {
+      console.error(error);
       showNotif("error", "Error de red: La calibración no pudo ser enviada");
     }
   };
 
-  // Detecta cambios de orientación para diseño del modal
+  // Detecta cambios de orientación (modal) y de tamaño "TV" (gráfica comparativa)
   useEffect(() => {
-    const onChange = () =>
+    const onChange = () => {
       setIsPortrait(window.matchMedia("(orientation: portrait)").matches);
+      setIsTvLayout(window.matchMedia("(min-width: 1800px)").matches);
+    };
 
     window.addEventListener("orientationchange", onChange);
     window.addEventListener("resize", onChange);
@@ -80,10 +92,15 @@ export default function App() {
     };
   }, []);
 
+  // Refresca "now" periódicamente para reevaluar la conexión de los sensores
+  // sin depender de que llegue un nuevo dato de RTDB
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Escucha en tiempo real los cambios en RTBD para actualizar el dashboard
   useEffect(() => {
-    setLoading(true);
-
     // Función para manejar errores de Firebase
     const handleError = (error) => {
       console.error(error);
@@ -141,7 +158,6 @@ export default function App() {
           setPlanta(data.Planta);
           setAc(data.Ac);
           setEngineStartTimestamp(data.engineStartTimestamp);
-          setEngineStopTimestamp(data.engineStopTimestamp);
           setTotalMsAcumulados(data.totalMsAcumulados);
         }
       },
@@ -155,13 +171,12 @@ export default function App() {
       unsubHeartbeat();
       unsubEnergia();
     };
-  }, []);
+  }, [showNotif]);
 
   const AcPlanta = heartbeat?.Sala_sb?.timestamp;
   const redCorte = ac === 1;
   const plantaEncendida = planta === 1;
   const engineStart = engineStartTimestamp || 0;
-  const engineStop = engineStopTimestamp || 0;
   const acumulados = totalMsAcumulados || 0;
 
   if (loading) {
@@ -306,27 +321,28 @@ export default function App() {
             </div>
           </div>
 
-          {/* Estadísticas solo para TV (XL) */}
-          <section className="hidden tv:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="mb-4 ml-2">
-              <h3 className="text-slate-800 dark:text-white font-black text-sm uppercase">
-                Comparativo Global
-              </h3>
-              <div className="flex items-center justify-between">
-                <p className="text-[9px] text-slate-400 font-bold uppercase">
-                  Todas las salas en tiempo real
-                </p>
-                <span className="text-[9px] text-slate-400 font-bold">
-                  UMBRAL: {umbral?.alto ?? "--"}°C / HORAS:{" "}
-                  {horas?.visible ?? "--"}h
-                </span>
+          {/* Estadísticas solo para TV (XL) — se monta solo si realmente se va a ver */}
+          {isTvLayout && (
+            <section className="hidden tv:flex flex-1 flex-col bg-white dark:bg-slate-900 p-6 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="mb-4 ml-2">
+                <h3 className="text-slate-800 dark:text-white font-black text-sm uppercase">
+                  Comparativo Global
+                </h3>
+                <div className="flex items-center justify-between">
+                  <p className="text-[9px] text-slate-400 font-bold uppercase">
+                    Todas las salas en tiempo real
+                  </p>
+                  <span className="text-[9px] text-slate-400 font-bold">
+                    RANGO GRÁFICA: {horas?.visible ?? "--"}h
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="flex-1 w-full">
-              <GraficaComparativa />
-            </div>
-          </section>
+              <div className="flex-1 w-full">
+                <GraficaComparativa />
+              </div>
+            </section>
+          )}
         </section>
 
         {/* PANEL SALAS */}
@@ -339,8 +355,10 @@ export default function App() {
 
               // Estado del ESP (Sala 1, 2,3)
               const heartbeatSensor = heartbeat?.[sala]?.timestamp;
+              // 90s = 1.5x el intervalo de heartbeat (60s) de los ESP; visual únicamente,
+              // no afecta si se notifica por Telegram (eso lo controla MARGEN_TIEMPO en el servidor)
               const espOnline =
-                heartbeatSensor && Date.now() - heartbeatSensor < 170000;
+                heartbeatSensor && now - heartbeatSensor < 90000;
 
               // Si es Sala 4 y su estado Bluetooth
               const esSala4 = sala === "Sala_4";
@@ -367,9 +385,12 @@ export default function App() {
                   ? "—"
                   : Number(bateria).toFixed(0);
 
+              // Umbral propio de la sala; si aún no se ha configurado uno individual,
+              // se usa el valor global "alto" como respaldo (compatibilidad hacia atrás)
+              const umbralSala = umbral?.[sala] ?? umbral?.alto;
               const esCritico =
                 conexionTotalOk &&
-                dataSensores.temperatura >= (umbral?.alto ?? Infinity);
+                dataSensores.temperatura >= (umbralSala ?? Infinity);
               const nombreSala = sala.replace("_", " ");
 
               return (
@@ -388,6 +409,9 @@ export default function App() {
                       <h3 className="text-sm md:text-3xl font-black uppercase tracking-tighter dark:text-white truncate pr-2">
                         {nombreSala}
                       </h3>
+                      <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Umbral: {umbralSala ?? "--"}°C
+                      </span>
                     </div>
 
                     {/* COLUMNA ESTADO */}
@@ -492,7 +516,8 @@ export default function App() {
                     {selectedSala.id.replace("_", " ")}
                   </h2>
                   <span className="text-[9px] text-slate-400 font-bold uppercase">
-                    Umbral: {umbral?.alto ?? "--"}°C
+                    Umbral:{" "}
+                    {umbral?.[selectedSala.id] ?? umbral?.alto ?? "--"}°C
                   </span>
                 </div>
 

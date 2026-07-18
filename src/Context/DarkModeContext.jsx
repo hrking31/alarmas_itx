@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+// eslint-disable-next-line react-refresh/only-export-components -- contexto + hook junto al provider; separarlo obligaría a tocar los imports de varios componentes por una mejora menor de hot-reload en desarrollo
 export const DarkModeContext = createContext(null);
+// eslint-disable-next-line react-refresh/only-export-components -- ver nota arriba
 export const useDarkMode = () => useContext(DarkModeContext);
 
 export function DarkModeProvider({ children }) {

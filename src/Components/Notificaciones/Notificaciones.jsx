@@ -16,7 +16,7 @@ export default function Notificaciones() {
       const timer = setTimeout(() => setNotif({ ...notif, open: false }), 4000);
       return () => clearTimeout(timer);
     }
-  }, [notif.open, notif.type, setNotif]);
+  }, [notif, setNotif]);
 
   if (!notif.open) return null;
 

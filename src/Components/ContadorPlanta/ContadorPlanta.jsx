@@ -12,14 +12,14 @@ const DigitoCasilla = ({
   esRojo,
   darkMode,
 }) => {
-  const [now, setNow] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
   // Solo se actualiza el rojo que es el que muestra el progreso en tiempo real
   useEffect(() => {
     if (!esRojo) return;
 
     const interval = setInterval(() => {
-      setNow((t) => t + 1);
+      setNow(Date.now());
     }, 100); // fluido
 
     return () => clearInterval(interval);
@@ -34,7 +34,7 @@ const DigitoCasilla = ({
     const plantaEncendida = estado === true || estado === 1;
 
     if (plantaEncendida && engineStartTimestamp) {
-      tiempoActualMs += Date.now() - engineStartTimestamp;
+      tiempoActualMs += now - engineStartTimestamp;
     }
 
     // Total de décimas acumuladas

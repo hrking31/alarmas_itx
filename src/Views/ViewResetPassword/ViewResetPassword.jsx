@@ -23,7 +23,6 @@ export default function ViewResetPassword() {
       );
       setTimeout(() => navigate("/ViewLogin"), 3000);
     } catch (err) {
-      console.log("🔥 Error Firebase:", err.code, err.message);
       const errorMessages = {
         "auth/missing-email": "Debes ingresar un correo electrónico.",
         "auth/invalid-email": "El formato del correo es inválido.",
@@ -66,6 +65,8 @@ export default function ViewResetPassword() {
                   Correo Electrónico
                 </label>
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

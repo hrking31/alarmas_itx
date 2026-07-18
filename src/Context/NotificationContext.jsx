@@ -16,7 +16,7 @@ export function NotificationProvider({ children }) {
     setNotif((prev) => ({ ...prev, open: false }));
   }, []);
 
-  const showNotif = (type, message) => {
+  const showNotif = useCallback((type, message) => {
     // Primero cerramos cualquier notificación abierta para reiniciar la animación
     setNotif({ open: false, type, message, onConfirm: null, onCancel: null });
 
@@ -30,7 +30,7 @@ export function NotificationProvider({ children }) {
         onCancel: null,
       });
     }, 10);
-  };
+  }, []);
 
   const confirmAction = (message) => {
     return new Promise((resolve) => {
@@ -65,4 +65,5 @@ export function NotificationProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook junto al provider; separarlo obligaría a tocar los imports de ~15 componentes por una mejora menor de hot-reload en desarrollo
 export const useNotificationContext = () => useContext(NotificationContext);

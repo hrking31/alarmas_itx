@@ -160,6 +160,7 @@ export default function GraficaTiempoReal({
             setDatos([]);
           }
         } catch (error) {
+          console.error(error);
           showNotif("error", "FALLO DE SISTEMA: Error cargando históricos:");
           setDatos([]);
         } finally {
@@ -169,7 +170,7 @@ export default function GraficaTiempoReal({
 
       cargarHistoricoFS();
     }
-  }, [salaId, fechaSeleccionada]);
+  }, [salaId, fechaSeleccionada, showNotif]);
 
   return (
     <div
@@ -187,7 +188,13 @@ export default function GraficaTiempoReal({
         </div>
       ) : null}
 
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        minWidth={0}
+        minHeight={200}
+        initialDimension={{ width: 500, height: 300 }}
+      >
         <AreaChart data={datos} accessibilityLayer={false}>
           <defs>
             {/* Gradiente para el efecto neón debajo de la línea */}

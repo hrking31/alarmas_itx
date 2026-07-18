@@ -60,6 +60,8 @@ export default function DateOnlyPicker({
       {/* Input oculto */}
       <input
         ref={inputRef}
+        id="fecha-grafica"
+        name="fecha-grafica"
         type="date"
         value={fechaSeleccionada}
         onChange={(e) => setFechaSeleccionada(e.target.value)}
